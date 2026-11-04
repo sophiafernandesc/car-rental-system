@@ -1,0 +1,126 @@
+@startuml classes
+' Layout interno (dispensa instalação do Graphviz)
+!pragma layout smetana
+
+title Diagrama de Classes - Sistema de Aluguel de Carros (v1)
+
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor<<futuro>> #FFFFFF
+  BorderColor<<futuro>> #9E9E9E
+  FontColor<<futuro>> #757575
+}
+hide empty methods
+
+package "model" {
+
+  abstract class Usuario {
+    - id : Long
+    - login : String
+    - senha : String
+    - perfil : Perfil
+  }
+
+  enum Perfil {
+    CLIENTE
+    AGENTE
+  }
+
+  class Cliente {
+    - rg : String
+    - cpf : String
+    - nome : String
+    - endereco : String
+    - profissao : String
+    + adicionarRendimento(rendimento : Rendimento) : void
+    + getRendaTotal() : BigDecimal
+  }
+
+  class Rendimento {
+    - id : Long
+    - entidadeEmpregadora : String
+    - valor : BigDecimal
+  }
+
+  abstract class Agente {
+    - cnpj : String
+    - razaoSocial : String
+  }
+
+  class Empresa
+  class Banco
+
+  class Automovel {
+    - id : Long
+    - matricula : String
+    - ano : int
+    - marca : String
+    - modelo : String
+    - placa : String
+  }
+
+  class PedidoAluguel {
+    - id : Long
+    - dataInicio : LocalDate
+    - dataFim : LocalDate
+    - dataCriacao : LocalDateTime
+    - status : StatusPedido
+    + aprovar(agente : Agente) : void
+    + reprovar(agente : Agente) : void
+  }
+
+  enum StatusPedido {
+    EM_ANALISE
+    APROVADO
+    REPROVADO
+    CANCELADO
+    CONTRATADO
+  }
+
+  class Contrato <<futuro>> {
+    - id : Long
+    - dataExecucao : LocalDate
+    - tipoProprietario : TipoProprietario
+  }
+
+  enum TipoProprietario <<futuro>> {
+    CLIENTE
+    EMPRESA
+    BANCO
+  }
+
+  class ContratoCredito <<futuro>> {
+    - id : Long
+    - valor : BigDecimal
+    - taxaJuros : BigDecimal
+    - prazoMeses : int
+  }
+}
+
+' ===== Herança =====
+Usuario <|-- Cliente
+Usuario <|-- Agente
+Agente <|-- Empresa
+Agente <|-- Banco
+
+' ===== Associações =====
+Cliente "1" *-- "0..3" Rendimento : rendimentos
+PedidoAluguel "0..*" --> "1" Cliente : cliente
+PedidoAluguel "0..*" --> "1" Automovel : automovel
+PedidoAluguel "0..*" --> "0..1" Agente : avaliador
+Contrato "0..1" --> "1" PedidoAluguel : pedido
+Contrato "1" *-- "0..1" ContratoCredito : credito
+ContratoCredito "0..*" --> "1" Banco : banco
+
+note bottom of Contrato
+  O proprietário do automóvel
+  (Cliente, Empresa ou Banco)
+  é definido pelo tipo de contrato.
+end note
+
+legend right
+  Getters, setters e construtores omitidos.
+  «futuro»: apenas modelado (fora do MVP)
+endlegend
+
+@enduml

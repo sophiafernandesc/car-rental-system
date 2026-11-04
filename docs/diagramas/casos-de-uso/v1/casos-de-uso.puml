@@ -1,0 +1,90 @@
+@startuml casos-de-uso
+' Layout interno (dispensa instalação do Graphviz)
+!pragma layout smetana
+
+title Diagrama de Casos de Uso - Sistema de Aluguel de Carros (v1)
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #DFF5E1
+  BorderColor #2E7D32
+}
+
+' ===== Atores =====
+actor "Visitante" as Visitante
+actor "Usuário" as Usuario
+actor "Cliente" as Cliente
+actor "Agente" as Agente
+actor "Empresa" as Empresa
+actor "Banco" as Banco
+
+Cliente --|> Usuario
+Agente --|> Usuario
+Empresa --|> Agente
+Banco --|> Agente
+
+' ===== Casos de uso =====
+rectangle "Sistema de Aluguel de Carros" {
+  ' Autenticação
+  usecase "Cadastrar-se como cliente\n(US01)" as UC01
+  usecase "Cadastrar-se como agente\n(US02)" as UC02 #EEEEEE
+  usecase "Fazer login\n(US03)" as UC03
+  usecase "Fazer logout\n(US04)" as UC04
+
+  ' Cliente - Perfil
+  usecase "Consultar meus dados\n(US05)" as UC05
+  usecase "Atualizar meus dados\n(US06)" as UC06
+  usecase "Gerenciar rendimentos\n(US07)" as UC07
+  usecase "Excluir minha conta\n(US08)" as UC08
+
+  ' Cliente - Pedidos
+  usecase "Criar pedido de aluguel\n(US09)" as UC09
+  usecase "Consultar pedidos e status\n(US10)" as UC10
+  usecase "Modificar pedido\n(US11 / US15)" as UC11 #EEEEEE
+  usecase "Cancelar pedido\n(US12)" as UC12 #EEEEEE
+
+  ' Agente
+  usecase "Listar pedidos para análise\n(US13)" as UC13
+  usecase "Consultar dados financeiros\ndo cliente (US14)" as UC14 #EEEEEE
+  usecase "Avaliar pedido\n(US16)" as UC16
+  usecase "Executar contrato\n(US17)" as UC17 #EEEEEE
+  usecase "Gerenciar automóveis\n(US19 / US20)" as UC19 #EEEEEE
+
+  ' Banco
+  usecase "Conceder contrato de crédito\n(US18)" as UC18 #EEEEEE
+}
+
+' ===== Associações =====
+Visitante -- UC01
+Visitante -- UC02
+
+Usuario -- UC03
+Usuario -- UC04
+
+Cliente -- UC05
+Cliente -- UC06
+Cliente -- UC07
+Cliente -- UC08
+Cliente -- UC09
+Cliente -- UC10
+Cliente -- UC11
+Cliente -- UC12
+
+UC11 -- Agente
+UC13 -- Agente
+UC16 -- Agente
+UC17 -- Agente
+UC19 -- Agente
+
+' ===== Include / Extend =====
+UC14 .> UC16 : <<extend>>
+UC18 .> UC17 : <<extend>>
+
+legend right
+  |= Cor |= Escopo |
+  |<#DFF5E1>| MVP (implementado) |
+  |<#EEEEEE>| Seed / Futuro (apenas modelado) |
+endlegend
+
+@enduml

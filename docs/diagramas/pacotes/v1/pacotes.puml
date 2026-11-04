@@ -1,0 +1,79 @@
+@startuml pacotes
+' Layout interno (dispensa instalação do Graphviz)
+!pragma layout smetana
+
+title Diagrama de Pacotes (Visão Lógica) - Sistema de Aluguel de Carros (v1)
+
+skinparam packageStyle folder
+
+' Subsistema de construção dinâmica das páginas web
+package "frontend (React + Vite)" as FE {
+  package routes {
+  }
+  package pages {
+  }
+  package components {
+  }
+  package contexts {
+  }
+  package services {
+  }
+}
+
+' Subsistema de gestão de pedidos e contratos
+package "backend (br.pucminas.carrental)" as BE {
+  package controller {
+  }
+  package dto {
+  }
+  package service {
+  }
+  package repository {
+  }
+  package model {
+  }
+  package security {
+  }
+  package config {
+  }
+  package exception {
+  }
+}
+
+database "Supabase (PostgreSQL)" as DB
+
+' ===== Front-end =====
+routes ..> pages
+pages ..> components
+pages ..> contexts
+pages ..> services
+contexts ..> services
+
+' ===== Integração =====
+services ..> controller : HTTP / JSON (REST)
+
+' ===== Back-end =====
+controller ..> service
+controller ..> dto
+service ..> repository
+service ..> model
+service ..> dto
+service ..> exception
+repository ..> model
+security ..> repository
+config ..> security
+
+repository ..> DB : JPA / JDBC
+
+legend right
+  **Arquitetura MVC**
+  View: frontend (React + Vite)
+  Controller: controller
+  Model: service, repository, model
+  ----
+  **Subsistemas**
+  frontend: construção dinâmica das páginas web
+  backend: gestão de pedidos e contratos
+endlegend
+
+@enduml
