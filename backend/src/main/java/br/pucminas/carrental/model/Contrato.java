@@ -39,7 +39,6 @@ public class Contrato {
 	@JoinColumn(name = "pedido_id", nullable = false, unique = true)
 	private PedidoAluguel pedido;
 
-	// Fora do escopo atual (US18)
 	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "credito_id", unique = true)
 	private ContratoCredito credito;

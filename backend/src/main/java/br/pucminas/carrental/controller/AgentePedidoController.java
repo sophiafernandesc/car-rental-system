@@ -50,8 +50,9 @@ public class AgentePedidoController {
 	// US17
 	@PostMapping("/{pedidoId}/contrato")
 	@ResponseStatus(HttpStatus.CREATED)
-	public PedidoResponse executarContrato(@PathVariable Long pedidoId, @Valid @RequestBody ContratoRequest request) {
-		return pedidoService.executarContrato(pedidoId, request);
+	public PedidoResponse executarContrato(@AuthenticationPrincipal Jwt jwt, @PathVariable Long pedidoId,
+			@Valid @RequestBody ContratoRequest request) {
+		return pedidoService.executarContrato(agenteId(jwt), pedidoId, request);
 	}
 
 	private Long agenteId(Jwt jwt) {

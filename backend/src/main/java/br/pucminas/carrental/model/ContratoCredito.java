@@ -14,7 +14,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// Fora do MVP
 @Entity
 @Getter
 @Setter
@@ -37,5 +36,12 @@ public class ContratoCredito {
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "banco_id", nullable = false)
 	private Banco banco;
+
+	public ContratoCredito(Banco banco, BigDecimal valor, BigDecimal taxaJuros, int prazoMeses) {
+		this.banco = banco;
+		this.valor = valor;
+		this.taxaJuros = taxaJuros;
+		this.prazoMeses = prazoMeses;
+	}
 
 }

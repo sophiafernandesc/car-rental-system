@@ -1,12 +1,18 @@
 package br.pucminas.carrental.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.pucminas.carrental.dto.ContratoRequest;
+import br.pucminas.carrental.dto.CreditoRequest;
+import br.pucminas.carrental.dto.CreditoResponse;
 import br.pucminas.carrental.dto.PedidoRequest;
 import br.pucminas.carrental.dto.PedidoResponse;
 import br.pucminas.carrental.exception.ConflitoException;
@@ -14,8 +20,10 @@ import br.pucminas.carrental.exception.NegocioException;
 import br.pucminas.carrental.exception.RecursoNaoEncontradoException;
 import br.pucminas.carrental.model.Agente;
 import br.pucminas.carrental.model.Automovel;
+import br.pucminas.carrental.model.Banco;
 import br.pucminas.carrental.model.Cliente;
 import br.pucminas.carrental.model.Contrato;
+import br.pucminas.carrental.model.ContratoCredito;
 import br.pucminas.carrental.model.PedidoAluguel;
 import br.pucminas.carrental.model.StatusPedido;
 import br.pucminas.carrental.repository.AgenteRepository;
@@ -58,9 +66,7 @@ public class PedidoService {
 	// US10
 	@Transactional(readOnly = true)
 	public List<PedidoResponse> listarDoCliente(Long clienteId) {
-		return pedidoRepository.findByClienteIdOrderByDataCriacaoDesc(clienteId).stream()
-				.map(this::toResponse)
-				.toList();
+		return toResponses(pedidoRepository.findByClienteIdOrderByDataCriacaoDesc(clienteId));
 	}
 
 	// US10
@@ -92,9 +98,7 @@ public class PedidoService {
 	// US13
 	@Transactional(readOnly = true)
 	public List<PedidoResponse> listarPorStatus(StatusPedido status) {
-		return pedidoRepository.findByStatusOrderByDataCriacaoAsc(status).stream()
-				.map(this::toResponse)
-				.toList();
+		return toResponses(pedidoRepository.findByStatusOrderByDataCriacaoAsc(status));
 	}
 
 	// US16
@@ -113,11 +117,22 @@ public class PedidoService {
 		return toResponse(pedido);
 	}
 
-	// US17
+	// US17 e US18
 	@Transactional
-	public PedidoResponse executarContrato(Long pedidoId, ContratoRequest request) {
+	public PedidoResponse executarContrato(Long agenteId, Long pedidoId, ContratoRequest request) {
 		PedidoAluguel pedido = buscarPedido(pedidoId);
-		contratoRepository.save(new Contrato(pedido, request.tipoProprietario()));
+		Contrato contrato = new Contrato(pedido, request.tipoProprietario());
+
+		CreditoRequest credito = request.credito();
+		if (credito != null) {
+			// unproxy: o agente pode já estar carregado como proxy (ex.: avaliador do pedido)
+			if (!(Hibernate.unproxy(buscarAgente(agenteId)) instanceof Banco banco)) {
+				throw new NegocioException(HttpStatus.FORBIDDEN, "Apenas agentes do tipo Banco podem conceder crédito.");
+			}
+			contrato.setCredito(banco.concederCredito(credito.valor(), credito.taxaJuros(), credito.prazoMeses()));
+		}
+
+		contratoRepository.save(contrato);
 		return toResponse(pedido);
 	}
 
@@ -154,14 +169,33 @@ public class PedidoService {
 				.orElseThrow(() -> new RecursoNaoEncontradoException("Agente não encontrado."));
 	}
 
+	// Busca os contratos de todos os pedidos contratados da lista em uma única consulta
+	private List<PedidoResponse> toResponses(List<PedidoAluguel> pedidos) {
+		List<Long> contratados = pedidos.stream()
+				.filter(p -> p.getStatus() == StatusPedido.CONTRATADO)
+				.map(PedidoAluguel::getId)
+				.toList();
+		Map<Long, Contrato> contratos = contratados.isEmpty()
+				? Map.of()
+				: contratoRepository.findByPedidoIdIn(contratados).stream()
+						.collect(Collectors.toMap(c -> c.getPedido().getId(), Function.identity()));
+
+		return pedidos.stream()
+				.map(p -> toResponse(p, contratos.get(p.getId())))
+				.toList();
+	}
+
 	private PedidoResponse toResponse(PedidoAluguel pedido) {
+		Contrato contrato = pedido.getStatus() == StatusPedido.CONTRATADO
+				? contratoRepository.findByPedidoId(pedido.getId()).orElse(null)
+				: null;
+		return toResponse(pedido, contrato);
+	}
+
+	private PedidoResponse toResponse(PedidoAluguel pedido, Contrato contrato) {
 		Cliente cliente = pedido.getCliente();
 		Agente avaliador = pedido.getAvaliador();
-		String proprietario = pedido.getStatus() == StatusPedido.CONTRATADO
-				? contratoRepository.findByPedidoId(pedido.getId())
-						.map(contrato -> contrato.getTipoProprietario().name())
-						.orElse(null)
-				: null;
+		ContratoCredito credito = contrato != null ? contrato.getCredito() : null;
 
 		return new PedidoResponse(
 				pedido.getId(),
@@ -173,7 +207,11 @@ public class PedidoService {
 				cliente.getNome(),
 				cliente.getRendaTotal(),
 				avaliador != null ? avaliador.getRazaoSocial() : null,
-				proprietario);
+				contrato != null ? contrato.getTipoProprietario().name() : null,
+				credito != null
+						? new CreditoResponse(credito.getValor(), credito.getTaxaJuros(), credito.getPrazoMeses(),
+								credito.getBanco().getRazaoSocial())
+						: null);
 	}
 
 }
