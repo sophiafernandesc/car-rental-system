@@ -511,7 +511,7 @@ As funcionalidades foram validadas de ponta a ponta durante o desenvolvimento:
 - **Navegador:** fluxos completos do cliente e do agente, incluindo layout em telas pequenas.
 
 > [!NOTE]
-> Testes unitários das regras de domínio e testes E2E não foram implementados nesta versão.
+> Testes E2E não foram implementados nesta versão.
 
 ---
 
