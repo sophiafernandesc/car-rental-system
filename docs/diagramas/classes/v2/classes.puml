@@ -1,0 +1,135 @@
+@startuml classes
+' Layout interno (dispensa instalação do Graphviz)
+!pragma layout smetana
+
+title Diagrama de Classes - Sistema de Aluguel de Carros (v2)
+
+skinparam classAttributeIconSize 0
+hide empty methods
+
+package "model" {
+
+  abstract class Usuario {
+    - id : Long
+    - login : String
+    - senha : String
+    - perfil : Perfil
+  }
+
+  enum Perfil {
+    CLIENTE
+    AGENTE
+  }
+
+  class Cliente {
+    - rg : String
+    - cpf : String
+    - nome : String
+    - endereco : String
+    - profissao : String
+    + adicionarRendimento(rendimento : Rendimento) : void
+    + getRendaTotal() : BigDecimal
+  }
+
+  class Rendimento {
+    - id : Long
+    - entidadeEmpregadora : String
+    - valor : BigDecimal
+  }
+
+  abstract class Agente {
+    - cnpj : String
+    - razaoSocial : String
+  }
+
+  class Empresa
+
+  class Banco {
+    + concederCredito(valor : BigDecimal, taxaJuros : BigDecimal, prazoMeses : int) : ContratoCredito
+  }
+
+  class Automovel {
+    - id : Long
+    - matricula : String
+    - ano : int
+    - marca : String
+    - modelo : String
+    - placa : String
+  }
+
+  class PedidoAluguel {
+    - id : Long
+    - dataInicio : LocalDate
+    - dataFim : LocalDate
+    - dataCriacao : LocalDateTime
+    - status : StatusPedido
+    + aprovar(agente : Agente) : void
+    + reprovar(agente : Agente) : void
+    + modificar(automovel : Automovel, dataInicio : LocalDate, dataFim : LocalDate) : void
+    + cancelar() : void
+    + contratar() : void
+  }
+
+  enum StatusPedido {
+    EM_ANALISE
+    APROVADO
+    REPROVADO
+    CANCELADO
+    CONTRATADO
+  }
+
+  class Contrato {
+    - id : Long
+    - dataExecucao : LocalDate
+    - tipoProprietario : TipoProprietario
+    + Contrato(pedido : PedidoAluguel, tipoProprietario : TipoProprietario)
+  }
+
+  enum TipoProprietario {
+    CLIENTE
+    EMPRESA
+    BANCO
+  }
+
+  class ContratoCredito {
+    - id : Long
+    - valor : BigDecimal
+    - taxaJuros : BigDecimal
+    - prazoMeses : int
+  }
+}
+
+' ===== Herança =====
+Usuario <|-- Cliente
+Usuario <|-- Agente
+Agente <|-- Empresa
+Agente <|-- Banco
+
+' ===== Associações =====
+Cliente "1" *-- "0..3" Rendimento : rendimentos
+PedidoAluguel "0..*" --> "1" Cliente : cliente
+PedidoAluguel "0..*" --> "1" Automovel : automovel
+PedidoAluguel "0..*" --> "0..1" Agente : avaliador
+Contrato "0..1" --> "1" PedidoAluguel : pedido
+Contrato "1" *-- "0..1" ContratoCredito : credito
+ContratoCredito "0..*" --> "1" Banco : banco
+
+note bottom of Contrato
+  O proprietário do automóvel
+  (Cliente, Empresa ou Banco)
+  é definido pelo tipo de contrato.
+  Criar o contrato chama pedido.contratar().
+end note
+
+note right of PedidoAluguel
+  Transições de status:
+  EM_ANALISE → APROVADO | REPROVADO | CANCELADO
+  APROVADO → CONTRATADO | CANCELADO
+end note
+
+legend right
+  Getters, setters e construtores
+  padrão (JPA) omitidos.
+endlegend
+
+@enduml
