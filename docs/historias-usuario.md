@@ -14,13 +14,13 @@
 | US08 | Excluir minha conta | Cliente | CRUD Cliente | MVP |
 | US09 | Criar pedido de aluguel | Cliente | Protótipo | MVP |
 | US10 | Consultar meus pedidos e status | Cliente | Protótipo | MVP |
-| US11 | Modificar pedido | Cliente | Sistema completo | Futuro |
-| US12 | Cancelar pedido | Cliente | Sistema completo | Futuro |
+| US11 | Modificar pedido | Cliente | Sistema completo | Pós-MVP |
+| US12 | Cancelar pedido | Cliente | Sistema completo | Pós-MVP |
 | US13 | Listar pedidos para análise | Agente | Sistema completo | MVP (simplificado) |
 | US14 | Consultar dados financeiros do cliente | Agente | Sistema completo | Futuro |
 | US15 | Modificar pedido | Agente | Sistema completo | Futuro |
 | US16 | Avaliar pedido | Agente | Sistema completo | MVP (simplificado) |
-| US17 | Executar contrato | Agente | Sistema completo | Futuro |
+| US17 | Executar contrato | Agente | Sistema completo | Pós-MVP |
 | US18 | Conceder contrato de crédito | Banco | Sistema completo | Futuro |
 | US19 | Cadastrar automóvel | Agente | Sistema completo | Seed |
 | US20 | Gerenciar automóveis | Agente | Sistema completo | Futuro |
@@ -28,6 +28,7 @@
 **Escopo:**
 - **MVP** - implementado com back-end e tela.
 - **MVP (simplificado)** - implementado apenas com os critérios marcados como MVP na história.
+- **Pós-MVP** - implementado com back-end e tela após a entrega do MVP.
 - **Seed** - dados inseridos diretamente no banco (`data.sql`), sem tela de cadastro.
 - **Futuro** - mantido na modelagem (entidades existem no código), sem funcionalidade implementada nesta versão.
 
@@ -135,7 +136,7 @@
 - [ ] Só é permitido modificar pedidos com status `EM_ANALISE`.
 - [ ] As mesmas validações da criação se aplicam.
 
-> **Pendente:** confirmar regra de status permitido 
+> **Decisão adotada:** apenas pedidos `EM_ANALISE` podem ser modificados (a confirmar com o professor).
 
 ### US12 - Cancelar pedido
 **Como** cliente, **quero** cancelar um pedido, **para** desistir do aluguel.
@@ -145,7 +146,7 @@
 - [ ] O sistema solicita confirmação antes de cancelar.
 - [ ] O pedido passa para o status `CANCELADO` (não é removido do banco).
 
-> **Pendente:** confirmar se o cancelamento após `APROVADO` é permitido.
+> **Decisão adotada:** o cancelamento é permitido em `EM_ANALISE` e `APROVADO` (a confirmar com o professor).
 
 ---
 
