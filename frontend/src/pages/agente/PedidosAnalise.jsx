@@ -6,8 +6,9 @@ import PedidoCard from '../../components/PedidoCard.jsx'
 import PedidoDetalhe from '../../components/PedidoDetalhe.jsx'
 import StatusBadge from '../../components/StatusBadge.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
+import { automovelService } from '../../services/automovelService'
 import { pedidoService } from '../../services/pedidoService'
-import { PROPRIETARIOS, formatarData, formatarMoeda } from '../../utils/formatadores'
+import { PROPRIETARIOS, formatarData, formatarMoeda, hojeIso } from '../../utils/formatadores'
 
 const ABAS = [
   { status: 'EM_ANALISE', rotulo: 'Em análise' },
@@ -16,7 +17,7 @@ const ABAS = [
   { status: 'REPROVADO', rotulo: 'Reprovados' },
 ]
 
-// US13, US14, US16, US17 e US18
+// US13 a US18
 export default function PedidosAnalise() {
   const [status, setStatus] = useState('EM_ANALISE')
   const [resultado, setResultado] = useState({ status: null, pedidos: [] })
@@ -25,6 +26,7 @@ export default function PedidosAnalise() {
   const [selecionado, setSelecionado] = useState(null)
   const [erroAcao, setErroAcao] = useState(null)
   const [processando, setProcessando] = useState(false)
+  const [editando, setEditando] = useState(false)
 
   useEffect(() => {
     let ativo = true
@@ -48,7 +50,24 @@ export default function PedidosAnalise() {
 
   function abrir(pedido) {
     setErroAcao(null)
+    setEditando(false)
     setSelecionado(pedido)
+  }
+
+  // US15: o pedido continua em análise, então permanece na aba atual
+  async function modificar(pedido, dados) {
+    setErroAcao(null)
+    setProcessando(true)
+    try {
+      const atualizado = await pedidoService.modificarPeloAgente(pedido.id, dados)
+      setResultado({ status, pedidos: pedidos.map((p) => (p.id === atualizado.id ? atualizado : p)) })
+      setSelecionado(null)
+      setMensagem(`Pedido #${pedido.id} de ${pedido.clienteNome} modificado.`)
+    } catch (e) {
+      setErroAcao(e.message)
+    } finally {
+      setProcessando(false)
+    }
   }
 
   // Em caso de sucesso, o pedido sai da aba atual e o detalhe é fechado
@@ -154,13 +173,24 @@ export default function PedidosAnalise() {
           {(selecionado.status === 'EM_ANALISE' || selecionado.status === 'APROVADO') && (
             <footer className="modal-acoes">
               <Alerta>{erroAcao}</Alerta>
-              {selecionado.status === 'EM_ANALISE' && (
+              {selecionado.status === 'EM_ANALISE' && editando && (
+                <ModificarPedido
+                  pedido={selecionado}
+                  processando={processando}
+                  onSalvar={(dados) => modificar(selecionado, dados)}
+                  onCancelar={() => setEditando(false)}
+                />
+              )}
+              {selecionado.status === 'EM_ANALISE' && !editando && (
                 <div className="acoes">
                   <button type="button" className="btn btn-sucesso" onClick={() => avaliar(selecionado, true)} disabled={processando}>
                     Aprovar pedido
                   </button>
                   <button type="button" className="btn btn-perigo" onClick={() => avaliar(selecionado, false)} disabled={processando}>
                     Reprovar pedido
+                  </button>
+                  <button type="button" className="btn btn-vidro" onClick={() => setEditando(true)} disabled={processando}>
+                    Modificar pedido
                   </button>
                 </div>
               )}
@@ -175,6 +205,58 @@ export default function PedidosAnalise() {
         </Modal>
       )}
     </>
+  )
+}
+
+// US15: o agente altera o automóvel ou o período de um pedido em análise
+function ModificarPedido({ pedido, processando, onSalvar, onCancelar }) {
+  const [automoveis, setAutomoveis] = useState(null)
+  const [erro, setErro] = useState(null)
+  const [form, setForm] = useState({
+    automovelId: String(pedido.automovel.id),
+    dataInicio: pedido.dataInicio,
+    dataFim: pedido.dataFim,
+  })
+
+  useEffect(() => {
+    automovelService.listar().then(setAutomoveis).catch((e) => setErro(e.message))
+  }, [])
+
+  function alterar(evento) {
+    setForm({ ...form, [evento.target.name]: evento.target.value })
+  }
+
+  function salvar(evento) {
+    evento.preventDefault()
+    onSalvar({ ...form, automovelId: Number(form.automovelId) })
+  }
+
+  return (
+    <form className="form" onSubmit={salvar} aria-label="Modificar pedido">
+      <Alerta>{erro}</Alerta>
+      <div className="campo">
+        <label htmlFor="automovelId">Automóvel</label>
+        <select id="automovelId" name="automovelId" value={form.automovelId} onChange={alterar} disabled={!automoveis} required>
+          {automoveis?.map((carro) => (
+            <option key={carro.id} value={carro.id}>
+              {carro.marca} {carro.modelo} · {carro.ano} · {carro.placa}
+            </option>
+          )) ?? <option value={form.automovelId}>Carregando…</option>}
+        </select>
+      </div>
+      <div className="form-grid">
+        <Campo id="dataInicio" label="Data de início" type="date" min={hojeIso()} value={form.dataInicio} onChange={alterar} required />
+        <Campo id="dataFim" label="Data de devolução" type="date" min={form.dataInicio} value={form.dataFim} onChange={alterar} required />
+      </div>
+      <div className="acoes">
+        <button type="submit" className="btn btn-primario" disabled={processando || !automoveis}>
+          {processando ? 'Salvando…' : 'Salvar alterações'}
+        </button>
+        <button type="button" className="btn btn-vidro" onClick={onCancelar}>
+          Voltar
+        </button>
+      </div>
+    </form>
   )
 }
 

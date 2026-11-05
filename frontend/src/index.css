@@ -408,7 +408,8 @@ a {
   color: var(--texto-suave);
 }
 
-.campo input {
+.campo input,
+.campo select {
   width: 100%;
   min-height: 46px;
   padding: 11px 14px;
@@ -418,6 +419,17 @@ a {
   color: var(--texto);
   font: inherit;
   transition: border-color 0.15s, background-color 0.15s;
+}
+
+.campo select:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 1px;
+  border-color: var(--acento);
+}
+
+.campo select option {
+  background: #101a15;
+  color: var(--texto);
 }
 
 .campo input::placeholder {

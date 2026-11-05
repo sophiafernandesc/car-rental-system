@@ -8,6 +8,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.pucminas.carrental.dto.ContratoRequest;
 import br.pucminas.carrental.dto.PedidoDetalheResponse;
+import br.pucminas.carrental.dto.PedidoRequest;
 import br.pucminas.carrental.dto.PedidoResponse;
 import br.pucminas.carrental.model.StatusPedido;
 import br.pucminas.carrental.service.PedidoService;
@@ -40,6 +42,12 @@ public class AgentePedidoController {
 	@GetMapping("/{pedidoId}")
 	public PedidoDetalheResponse detalhar(@PathVariable Long pedidoId) {
 		return pedidoService.detalharParaAgente(pedidoId);
+	}
+
+	// US15
+	@PutMapping("/{pedidoId}")
+	public PedidoResponse modificar(@PathVariable Long pedidoId, @Valid @RequestBody PedidoRequest request) {
+		return pedidoService.modificarPeloAgente(pedidoId, request);
 	}
 
 	// US16

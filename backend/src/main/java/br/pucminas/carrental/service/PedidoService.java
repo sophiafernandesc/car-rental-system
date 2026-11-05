@@ -82,12 +82,24 @@ public class PedidoService {
 	@Transactional
 	public PedidoResponse modificar(Long clienteId, Long pedidoId, PedidoRequest request) {
 		PedidoAluguel pedido = buscarPedidoDoCliente(clienteId, pedidoId);
+		aplicarModificacao(pedido, request);
+		return toResponse(pedido);
+	}
+
+	// US15
+	@Transactional
+	public PedidoResponse modificarPeloAgente(Long pedidoId, PedidoRequest request) {
+		PedidoAluguel pedido = buscarPedido(pedidoId);
+		aplicarModificacao(pedido, request);
+		return toResponse(pedido);
+	}
+
+	private void aplicarModificacao(PedidoAluguel pedido, PedidoRequest request) {
 		Automovel automovel = buscarAutomovel(request);
 		// A regra de status (entidade) é verificada antes da disponibilidade;
 		// se o automóvel estiver indisponível, a exceção desfaz a alteração (rollback)
 		pedido.modificar(automovel, request.dataInicio(), request.dataFim());
 		verificarDisponibilidade(automovel, request);
-		return toResponse(pedido);
 	}
 
 	// US12
