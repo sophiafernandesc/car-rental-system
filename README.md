@@ -435,6 +435,8 @@ Os agentes abaixo são criados pelo seed. Novos clientes e agentes podem ser cri
 | <img src="docs/prints/novo-pedido.jpg" alt="Tela de novo pedido" width="420px"> | <img src="docs/prints/perfil.jpg" alt="Tela de perfil" width="420px"> |
 | **Avaliação de pedidos: aba Contratados (agente)** | **Detalhe do pedido com dados financeiros do cliente (agente)** |
 | <img src="docs/prints/avaliacao-agente.jpg" alt="Painel do agente" width="420px"> | <img src="docs/prints/detalhe-agente.jpg" alt="Detalhe do pedido para o agente" width="420px"> |
+| **Frota de automóveis (agente)** | **Cadastro de agente (empresa ou banco)** |
+| <img src="docs/prints/frota.jpg" alt="Tela de gestão da frota" width="420px"> | <img src="docs/prints/cadastro-agente.jpg" alt="Tela de cadastro de agente" width="420px"> |
 
 ### 💻 Exemplo de uso da API (cURL)
 
