@@ -96,11 +96,13 @@ export default function PedidosAnalise() {
   }
 
   function executarContrato(pedido, tipoProprietario, credito) {
+    const proprietario = tipoProprietario === 'CLIENTE' ? pedido.clienteNome : sessao.nome
     return executar(
       pedido,
       () => pedidoService.executarContrato(pedido.id, tipoProprietario, credito),
       `Contrato do pedido #${pedido.id} executado${credito ? ' com crédito concedido' : ''}. ` +
-        `Proprietário do automóvel: ${tipoProprietario === 'CLIENTE' ? pedido.clienteNome : sessao.nome}.`,
+        // Razões sociais como "S.A." já terminam em ponto
+        `Proprietário do automóvel: ${proprietario}${proprietario.endsWith('.') ? '' : '.'}`,
     )
   }
 
