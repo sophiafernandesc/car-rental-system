@@ -4,5 +4,7 @@ public record LoginResponse(
 		String token,
 		Long id,
 		String nome,
-		String perfil) {
+		String perfil,
+		// EMPRESA ou BANCO para agentes; null para clientes
+		String tipoAgente) {
 }

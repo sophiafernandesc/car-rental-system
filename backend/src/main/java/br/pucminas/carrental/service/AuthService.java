@@ -10,7 +10,9 @@ import br.pucminas.carrental.dto.LoginResponse;
 import br.pucminas.carrental.exception.ConflitoException;
 import br.pucminas.carrental.exception.CredenciaisInvalidasException;
 import br.pucminas.carrental.model.Agente;
+import br.pucminas.carrental.model.Banco;
 import br.pucminas.carrental.model.Cliente;
+import br.pucminas.carrental.model.Empresa;
 import br.pucminas.carrental.model.Rendimento;
 import br.pucminas.carrental.model.Usuario;
 import br.pucminas.carrental.repository.ClienteRepository;
@@ -67,7 +69,16 @@ public class AuthService {
 				tokenService.gerarToken(usuario),
 				usuario.getId(),
 				nomeExibicao(usuario),
-				usuario.getPerfil().name());
+				usuario.getPerfil().name(),
+				tipoAgente(usuario));
+	}
+
+	private String tipoAgente(Usuario usuario) {
+		return switch (usuario) {
+			case Banco banco -> "BANCO";
+			case Empresa empresa -> "EMPRESA";
+			default -> null;
+		};
 	}
 
 	private String nomeExibicao(Usuario usuario) {
