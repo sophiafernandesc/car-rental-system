@@ -26,4 +26,4 @@ A avaliação considera a **evolução dos modelos**, então nenhuma versão é 
 
 | Diagrama | Versão | Data | Alterações |
 |---|---|---|---|
-| — | v1 | — | Versão inicial |
+| Casos de uso, Classes, Pacotes | v1 | 2026-11-04 | Versão inicial |
