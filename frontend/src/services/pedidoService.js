@@ -12,5 +12,6 @@ export const pedidoService = {
   listarPorStatus: (status) => api.get(`/agente/pedidos?status=${status}`),
   aprovar: (id) => api.post(`/agente/pedidos/${id}/aprovar`),
   reprovar: (id) => api.post(`/agente/pedidos/${id}/reprovar`),
-  executarContrato: (id, tipoProprietario) => api.post(`/agente/pedidos/${id}/contrato`, { tipoProprietario }),
+  executarContrato: (id, tipoProprietario, credito) =>
+    api.post(`/agente/pedidos/${id}/contrato`, { tipoProprietario, credito }),
 }

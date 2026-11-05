@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Alerta from '../../components/Alerta.jsx'
+import CreditoResumo from '../../components/CreditoResumo.jsx'
 import StatusBadge from '../../components/StatusBadge.jsx'
 import { pedidoService } from '../../services/pedidoService'
 import { PROPRIETARIOS, formatarData, formatarDataHora } from '../../utils/formatadores'
@@ -69,6 +70,7 @@ export default function MeusPedidos() {
                       Proprietário: <strong>{PROPRIETARIOS[pedido.proprietario]}</strong>
                     </span>
                   )}
+                  <CreditoResumo credito={pedido.credito} />
                 </div>
               </div>
               <div className="pedido-lateral">

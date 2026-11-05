@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import Alerta from '../../components/Alerta.jsx'
+import Campo from '../../components/Campo.jsx'
+import CreditoResumo from '../../components/CreditoResumo.jsx'
 import StatusBadge from '../../components/StatusBadge.jsx'
+import { useAuth } from '../../contexts/AuthContext.jsx'
 import { pedidoService } from '../../services/pedidoService'
 import { PROPRIETARIOS, formatarData, formatarDataHora, formatarMoeda } from '../../utils/formatadores'
 
@@ -63,11 +66,12 @@ export default function PedidosAnalise() {
     )
   }
 
-  function executarContrato(pedido, tipoProprietario) {
+  function executarContrato(pedido, tipoProprietario, credito) {
     return executar(
       pedido,
-      () => pedidoService.executarContrato(pedido.id, tipoProprietario),
-      `Contrato do pedido #${pedido.id} executado. Proprietário do automóvel: ${PROPRIETARIOS[tipoProprietario]}.`,
+      () => pedidoService.executarContrato(pedido.id, tipoProprietario, credito),
+      `Contrato do pedido #${pedido.id} executado${credito ? ' com crédito concedido' : ''}. ` +
+        `Proprietário do automóvel: ${PROPRIETARIOS[tipoProprietario]}.`,
     )
   }
 
@@ -126,6 +130,7 @@ export default function PedidosAnalise() {
                       Proprietário: <strong>{PROPRIETARIOS[pedido.proprietario]}</strong>
                     </span>
                   )}
+                  <CreditoResumo credito={pedido.credito} />
                 </div>
               </div>
 
@@ -157,7 +162,7 @@ export default function PedidosAnalise() {
                 {pedido.status === 'APROVADO' && (
                   <ExecutarContrato
                     processando={processandoId === pedido.id}
-                    onConfirmar={(tipo) => executarContrato(pedido, tipo)}
+                    onConfirmar={(tipo, credito) => executarContrato(pedido, tipo, credito)}
                   />
                 )}
                 {pedido.status !== 'EM_ANALISE' && pedido.status !== 'APROVADO' && <StatusBadge status={pedido.status} />}
@@ -171,9 +176,26 @@ export default function PedidosAnalise() {
 }
 
 // US17: o tipo de contrato define o proprietário do automóvel
+// US18: agentes do tipo Banco podem conceder um contrato de crédito junto
 function ExecutarContrato({ processando, onConfirmar }) {
+  const { sessao } = useAuth()
+  const ehBanco = sessao.tipoAgente === 'BANCO'
   const [aberto, setAberto] = useState(false)
   const [tipo, setTipo] = useState(null)
+  const [comCredito, setComCredito] = useState(false)
+  const [credito, setCredito] = useState({ valor: '', taxaJuros: '', prazoMeses: '' })
+
+  function alterarCredito(evento) {
+    setCredito({ ...credito, [evento.target.name]: evento.target.value })
+  }
+
+  function confirmar(evento) {
+    evento.preventDefault()
+    const dadosCredito = comCredito
+      ? { valor: Number(credito.valor), taxaJuros: Number(credito.taxaJuros), prazoMeses: Number(credito.prazoMeses) }
+      : null
+    onConfirmar(tipo, dadosCredito)
+  }
 
   if (!aberto) {
     return (
@@ -184,7 +206,7 @@ function ExecutarContrato({ processando, onConfirmar }) {
   }
 
   return (
-    <div className="contrato-opcoes" role="group" aria-label="Proprietário do automóvel">
+    <form className="contrato-opcoes" onSubmit={confirmar} aria-label="Executar contrato">
       <span className="contrato-rotulo">Proprietário do automóvel</span>
       <div className="acoes">
         {Object.entries(PROPRIETARIOS).map(([valor, rotulo]) => (
@@ -199,14 +221,29 @@ function ExecutarContrato({ processando, onConfirmar }) {
           </button>
         ))}
       </div>
+
+      {ehBanco && (
+        <label className="checkbox">
+          <input type="checkbox" checked={comCredito} onChange={(e) => setComCredito(e.target.checked)} />
+          Conceder contrato de crédito
+        </label>
+      )}
+      {ehBanco && comCredito && (
+        <div className="credito-campos">
+          <Campo id="valor" label="Valor (R$)" type="number" min="0.01" step="0.01" value={credito.valor} onChange={alterarCredito} required />
+          <Campo id="taxaJuros" label="Juros (% a.m.)" type="number" min="0" max="100" step="0.01" value={credito.taxaJuros} onChange={alterarCredito} required />
+          <Campo id="prazoMeses" label="Prazo (meses)" type="number" min="1" max="120" step="1" value={credito.prazoMeses} onChange={alterarCredito} required />
+        </div>
+      )}
+
       <div className="acoes">
-        <button type="button" className="btn btn-primario btn-sm" onClick={() => onConfirmar(tipo)} disabled={!tipo || processando}>
+        <button type="submit" className="btn btn-primario btn-sm" disabled={!tipo || processando}>
           {processando ? 'Executando…' : 'Confirmar contrato'}
         </button>
         <button type="button" className="btn btn-vidro btn-sm" onClick={() => setAberto(false)}>
           Voltar
         </button>
       </div>
-    </div>
+    </form>
   )
 }

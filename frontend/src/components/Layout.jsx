@@ -11,6 +11,13 @@ const LINKS = {
   AGENTE: [{ to: '/agente/pedidos', rotulo: 'Avaliação de pedidos' }],
 }
 
+const ROTULO_PERFIL = {
+  CLIENTE: 'Cliente',
+  AGENTE: 'Agente',
+  EMPRESA: 'Agente · Empresa',
+  BANCO: 'Agente · Banco',
+}
+
 export default function Layout() {
   const { sessao, logout } = useAuth()
 
@@ -28,7 +35,7 @@ export default function Layout() {
         <div className="topo-usuario">
           <div className="usuario-info">
             <span className="usuario-nome">{sessao.nome}</span>
-            <span className="usuario-perfil">{sessao.perfil === 'CLIENTE' ? 'Cliente' : 'Agente'}</span>
+            <span className="usuario-perfil">{ROTULO_PERFIL[sessao.tipoAgente ?? sessao.perfil]}</span>
           </div>
           <button type="button" className="btn btn-vidro btn-sm" onClick={logout}>
             Sair
