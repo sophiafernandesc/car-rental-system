@@ -11,10 +11,10 @@ import br.pucminas.carrental.model.Contrato;
 
 public interface ContratoRepository extends JpaRepository<Contrato, Long> {
 
-	@EntityGraph(attributePaths = { "credito", "credito.banco" })
+	@EntityGraph(attributePaths = { "credito", "credito.banco", "proprietario" })
 	Optional<Contrato> findByPedidoId(Long pedidoId);
 
-	@EntityGraph(attributePaths = { "credito", "credito.banco" })
+	@EntityGraph(attributePaths = { "credito", "credito.banco", "proprietario" })
 	List<Contrato> findByPedidoIdIn(Collection<Long> pedidoIds);
 
 }

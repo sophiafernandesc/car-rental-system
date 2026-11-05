@@ -22,7 +22,8 @@ function etapas(pedido) {
     case 'CONTRATADO':
       lista.push({
         rotulo: 'Contrato executado',
-        detalhe: `${formatarData(pedido.dataContrato)} · proprietário: ${PROPRIETARIOS[pedido.proprietario]}`,
+        detalhe: `${formatarData(pedido.dataContrato)} · proprietário: ${PROPRIETARIOS[pedido.proprietario]}` +
+          (pedido.proprietarioNome ? ` (${pedido.proprietarioNome})` : ''),
       })
       break
     case 'CANCELADO':

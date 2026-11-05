@@ -39,4 +39,19 @@ public interface PedidoAluguelRepository extends JpaRepository<PedidoAluguel, Lo
 			@Param("dataInicio") LocalDate dataInicio,
 			@Param("dataFim") LocalDate dataFim);
 
+	// Mesma verificação, desconsiderando o próprio pedido (usada na aprovação)
+	@Query("""
+			select count(p) > 0 from PedidoAluguel p
+			where p.automovel.id = :automovelId
+				and p.id <> :pedidoId
+				and p.status in :status
+				and p.dataInicio <= :dataFim
+				and p.dataFim >= :dataInicio
+			""")
+	boolean existsOutraReservaNoPeriodo(@Param("automovelId") Long automovelId,
+			@Param("pedidoId") Long pedidoId,
+			@Param("status") Collection<StatusPedido> status,
+			@Param("dataInicio") LocalDate dataInicio,
+			@Param("dataFim") LocalDate dataFim);
+
 }

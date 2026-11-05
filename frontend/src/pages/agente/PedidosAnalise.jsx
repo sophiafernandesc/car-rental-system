@@ -19,6 +19,7 @@ const ABAS = [
 
 // US13 a US18
 export default function PedidosAnalise() {
+  const { sessao } = useAuth()
   const [status, setStatus] = useState('EM_ANALISE')
   const [resultado, setResultado] = useState({ status: null, pedidos: [] })
   const [erro, setErro] = useState(null)
@@ -99,7 +100,7 @@ export default function PedidosAnalise() {
       pedido,
       () => pedidoService.executarContrato(pedido.id, tipoProprietario, credito),
       `Contrato do pedido #${pedido.id} executado${credito ? ' com crédito concedido' : ''}. ` +
-        `Proprietário do automóvel: ${PROPRIETARIOS[tipoProprietario]}.`,
+        `Proprietário do automóvel: ${tipoProprietario === 'CLIENTE' ? pedido.clienteNome : sessao.nome}.`,
     )
   }
 
@@ -307,11 +308,12 @@ function DetalheAgente({ pedido }) {
   )
 }
 
-// US17: o tipo de contrato define o proprietário do automóvel
+// US17: o automóvel fica em nome do cliente ou do próprio agente (Empresa ou Banco)
 // US18: agentes do tipo Banco podem conceder um contrato de crédito junto
 function ExecutarContrato({ processando, onConfirmar }) {
   const { sessao } = useAuth()
   const ehBanco = sessao.tipoAgente === 'BANCO'
+  const opcoes = Object.entries(PROPRIETARIOS).filter(([valor]) => valor === 'CLIENTE' || valor === sessao.tipoAgente)
   const [tipo, setTipo] = useState(null)
   const [comCredito, setComCredito] = useState(false)
   const [credito, setCredito] = useState({ valor: '', taxaJuros: '', prazoMeses: '' })
@@ -332,7 +334,7 @@ function ExecutarContrato({ processando, onConfirmar }) {
     <form className="contrato-opcoes" onSubmit={confirmar} aria-label="Executar contrato">
       <span className="contrato-rotulo">Proprietário do automóvel</span>
       <div className="acoes">
-        {Object.entries(PROPRIETARIOS).map(([valor, rotulo]) => (
+        {opcoes.map(([valor, rotulo]) => (
           <button
             key={valor}
             type="button"
@@ -340,7 +342,7 @@ function ExecutarContrato({ processando, onConfirmar }) {
             aria-pressed={tipo === valor}
             onClick={() => setTipo(valor)}
           >
-            {rotulo}
+            {valor === 'CLIENTE' ? rotulo : `${rotulo}: ${sessao.nome}`}
           </button>
         ))}
       </div>

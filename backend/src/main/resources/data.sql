@@ -48,3 +48,22 @@ SELECT * FROM (VALUES
 	('01578912345', 2023, 'Jeep', 'Renegade', 'YHN6Q67')
 ) AS frota (matricula, ano, marca, modelo, placa)
 WHERE NOT EXISTS (SELECT 1 FROM automovel);
+
+-- Contratos executados antes de o proprietário ser registrado: atribui o cliente do pedido,
+-- ou o agente do tipo escolhido (banco do crédito, avaliador do pedido ou o agente de demonstração)
+UPDATE contrato c SET proprietario_id = p.cliente_id
+FROM pedido_aluguel p
+WHERE c.pedido_id = p.id AND c.tipo_proprietario = 'CLIENTE' AND c.proprietario_id IS NULL;
+
+UPDATE contrato c SET proprietario_id = COALESCE(
+	(SELECT cc.banco_id FROM contrato_credito cc WHERE cc.id = c.credito_id),
+	(SELECT b.id FROM banco b WHERE b.id = p.avaliador_id),
+	(SELECT min(b.id) FROM banco b))
+FROM pedido_aluguel p
+WHERE c.pedido_id = p.id AND c.tipo_proprietario = 'BANCO' AND c.proprietario_id IS NULL;
+
+UPDATE contrato c SET proprietario_id = COALESCE(
+	(SELECT e.id FROM empresa e WHERE e.id = p.avaliador_id),
+	(SELECT min(e.id) FROM empresa e))
+FROM pedido_aluguel p
+WHERE c.pedido_id = p.id AND c.tipo_proprietario = 'EMPRESA' AND c.proprietario_id IS NULL;

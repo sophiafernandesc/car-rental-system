@@ -15,6 +15,7 @@ public record PedidoResponse(
 		BigDecimal clienteRendaTotal,
 		String avaliador,
 		String proprietario,
+		String proprietarioNome,
 		LocalDate dataContrato,
 		CreditoResponse credito) {
 }

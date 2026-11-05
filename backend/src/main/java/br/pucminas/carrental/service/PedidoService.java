@@ -29,6 +29,7 @@ import br.pucminas.carrental.model.Contrato;
 import br.pucminas.carrental.model.ContratoCredito;
 import br.pucminas.carrental.model.PedidoAluguel;
 import br.pucminas.carrental.model.StatusPedido;
+import br.pucminas.carrental.model.Usuario;
 import br.pucminas.carrental.repository.AgenteRepository;
 import br.pucminas.carrental.repository.AutomovelRepository;
 import br.pucminas.carrental.repository.ClienteRepository;
@@ -130,11 +131,18 @@ public class PedidoService {
 				new DadosFinanceirosResponse(cliente.getNome(), cliente.getProfissao(), rendimentos, cliente.getRendaTotal()));
 	}
 
-	// US16
+	// US16: o pedido aprovado reserva o automóvel, então a disponibilidade é conferida de novo
 	@Transactional
 	public PedidoResponse aprovar(Long agenteId, Long pedidoId) {
 		PedidoAluguel pedido = buscarPedido(pedidoId);
 		pedido.aprovar(buscarAgente(agenteId));
+
+		Long automovelId = pedido.getAutomovel().getId();
+		automovelRepository.bloquearParaReserva(automovelId);
+		if (pedidoRepository.existsOutraReservaNoPeriodo(automovelId, pedido.getId(), STATUS_RESERVAM_AUTOMOVEL,
+				pedido.getDataInicio(), pedido.getDataFim())) {
+			throw new ConflitoException("Automóvel já reservado por outro pedido neste período.");
+		}
 		return toResponse(pedido);
 	}
 
@@ -150,12 +158,13 @@ public class PedidoService {
 	@Transactional
 	public PedidoResponse executarContrato(Long agenteId, Long pedidoId, ContratoRequest request) {
 		PedidoAluguel pedido = buscarPedido(pedidoId);
-		Contrato contrato = new Contrato(pedido, request.tipoProprietario());
+		// unproxy: o agente pode já estar carregado como proxy (ex.: avaliador do pedido)
+		Agente agente = (Agente) Hibernate.unproxy(buscarAgente(agenteId));
+		Contrato contrato = new Contrato(pedido, request.tipoProprietario(), agente);
 
 		CreditoRequest credito = request.credito();
 		if (credito != null) {
-			// unproxy: o agente pode já estar carregado como proxy (ex.: avaliador do pedido)
-			if (!(Hibernate.unproxy(buscarAgente(agenteId)) instanceof Banco banco)) {
+			if (!(agente instanceof Banco banco)) {
 				throw new NegocioException(HttpStatus.FORBIDDEN, "Apenas agentes do tipo Banco podem conceder crédito.");
 			}
 			contrato.setCredito(banco.concederCredito(credito.valor(), credito.taxaJuros(), credito.prazoMeses()));
@@ -237,6 +246,9 @@ public class PedidoService {
 				cliente.getRendaTotal(),
 				avaliador != null ? avaliador.getRazaoSocial() : null,
 				contrato != null ? contrato.getTipoProprietario().name() : null,
+				contrato != null && contrato.getProprietario() != null
+						? AuthService.nomeExibicao((Usuario) Hibernate.unproxy(contrato.getProprietario()))
+						: null,
 				contrato != null ? contrato.getDataExecucao() : null,
 				credito != null
 						? new CreditoResponse(credito.getValor(), credito.getTaxaJuros(), credito.getPrazoMeses(),

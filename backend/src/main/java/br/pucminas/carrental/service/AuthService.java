@@ -104,7 +104,7 @@ public class AuthService {
 		};
 	}
 
-	private String nomeExibicao(Usuario usuario) {
+	static String nomeExibicao(Usuario usuario) {
 		return switch (usuario) {
 			case Cliente cliente -> cliente.getNome();
 			case Agente agente -> agente.getRazaoSocial();
