@@ -43,6 +43,8 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.POST, "/auth/login", "/auth/cadastro").permitAll()
 						.requestMatchers("/error").permitAll()
+						.requestMatchers("/clientes/**", "/pedidos/**").hasRole("CLIENTE")
+						.requestMatchers("/agente/**").hasRole("AGENTE")
 						.anyRequest().authenticated())
 				.oauth2ResourceServer(oauth2 -> oauth2
 						.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
