@@ -34,5 +34,15 @@ INSERT INTO automovel (matricula, ano, marca, modelo, placa) VALUES
 	('00234567891', 2023, 'Chevrolet', 'Onix', 'RTY2B34'),
 	('00345678912', 2024, 'Fiat', 'Pulse', 'UIO3C45'),
 	('00456789123', 2022, 'Toyota', 'Corolla', 'PAS4D56'),
-	('00567891234', 2025, 'Jeep', 'Compass', 'DFG5E67')
+	('00567891234', 2025, 'Jeep', 'Compass', 'DFG5E67'),
+	('00678912345', 2024, 'Fiat', 'Mobi', 'GHJ6F78'),
+	('00789123456', 2024, 'Renault', 'Kwid', 'KLZ7G89'),
+	('00891234567', 2023, 'Volkswagen', 'Gol', 'XCV8H90'),
+	('00912345678', 2024, 'Hyundai', 'HB20', 'BNM9J01'),
+	('01023456789', 2023, 'Fiat', 'Argo', 'QAZ1K12'),
+	('01134567891', 2024, 'Chevrolet', 'Onix Plus', 'WSX2L23'),
+	('01245678912', 2025, 'Volkswagen', 'Virtus', 'EDC3M34'),
+	('01356789123', 2024, 'Volkswagen', 'T-Cross', 'RFV4N45'),
+	('01467891234', 2025, 'Hyundai', 'Creta', 'TGB5P56'),
+	('01578912345', 2023, 'Jeep', 'Renegade', 'YHN6Q67')
 ON CONFLICT (placa) DO NOTHING;
