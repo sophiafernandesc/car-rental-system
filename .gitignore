@@ -3,3 +3,4 @@
 .env
 *.env.local
 enunciado-lab02.pdf
+node_modules/
