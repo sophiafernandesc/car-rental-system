@@ -199,7 +199,7 @@ flowchart LR
 - **Autenticação no próprio back-end (JWT), e não pelo Supabase Auth.** Assim o login faz parte do modelo e do código Spring (MVC), e o Supabase é usado apenas como banco PostgreSQL.
 - **Data API do Supabase desativada.** Todo acesso aos dados passa pelo back-end; os dados pessoais (CPF, RG, renda) não ficam expostos por uma API pública.
 - **Perfil no token.** O JWT carrega o perfil (`CLIENTE` ou `AGENTE`), convertido em *roles* do Spring Security. Cada perfil só acessa suas rotas, e o cliente só acessa os próprios dados.
-- **Reserva só na aprovação.** Pedidos aprovados ou contratados reservam o automóvel. A aprovação confere a disponibilidade com a linha do automóvel bloqueada no banco (`PESSIMISTIC_WRITE`), para que duas aprovações simultâneas do mesmo carro não reservem o mesmo período.
+- **Reserva só na aprovação.** Pedidos aprovados ou contratados reservam o automóvel. A aprovação confere a disponibilidade com a linha do automóvel bloqueada no banco (`PESSIMISTIC_WRITE`), para que duas aprovações simultâneas do mesmo carro não reservem o mesmo período. Toda alteração de pedido (modificar, cancelar, avaliar, executar contrato) também bloqueia a linha do pedido, então um cancelamento e uma execução de contrato simultâneos não deixam contrato em pedido cancelado.
 - **Proprietário concreto no contrato.** O contrato aponta para quem é o dono do automóvel: o cliente do pedido ou o agente (empresa ou banco) que executa o contrato. Um agente não registra o carro em nome de outro.
 - **Automóvel com pedidos não é removido.** Assim o histórico de pedidos e contratos é preservado.
 - **Desempenho com banco remoto.** As listagens trazem pedido, automóvel, cliente e avaliador numa única consulta (`@EntityGraph`); os contratos da lista vêm numa segunda consulta, e os rendimentos são carregados em lotes (*batch fetching*). Isso evita o problema N+1. Isso reduziu o tempo da lista de pedidos de ~1,7 s para ~0,55 s.
@@ -493,7 +493,7 @@ cd backend
 | `PedidoAluguelTest` | Transições de status: aprovar, reprovar, modificar, cancelar e contratar, inclusive as transições proibidas |
 | `ContratoTest` | Execução do contrato, proprietário (cliente ou o próprio agente) e crédito concedido pelo banco |
 | `ClienteTest` | Limite de 3 rendimentos e cálculo da renda total |
-| `PedidoServiceTest` | Aprovação: bloqueia o automóvel e recusa quando outro pedido já reservou o período |
+| `PedidoServiceTest` | Aprovação: bloqueia o pedido e o automóvel e recusa quando outro pedido já reservou o período; cancelar e executar contrato bloqueiam o pedido, e um pedido já cancelado não recebe contrato |
 | `CarrentalApplicationTests` | Sobe o contexto completo da aplicação, incluindo a conexão com o banco, a criação do schema e o seed |
 
 ### Testes manuais
@@ -504,6 +504,7 @@ As funcionalidades foram validadas de ponta a ponta durante o desenvolvimento:
   - avaliar pedido fora de análise → `422`;
   - carro indisponível no período → `409`;
   - aprovar pedido cujo carro já foi reservado por outro → `409` (inclusive com duas aprovações simultâneas);
+  - cancelar e executar contrato do mesmo pedido ao mesmo tempo → um `200` e um `422`, sem contrato em pedido cancelado;
   - empresa registrando o carro em nome de um banco → `422`;
   - empresa concedendo crédito → `403`;
   - cliente acessando pedido de outro → `404`;

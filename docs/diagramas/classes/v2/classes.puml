@@ -112,7 +112,7 @@ PedidoAluguel "0..*" --> "1" Automovel : automovel
 PedidoAluguel "0..*" --> "0..1" Agente : avaliador
 Contrato "0..1" --> "1" PedidoAluguel : pedido
 Contrato "1" *-- "0..1" ContratoCredito : credito
-Contrato "0..*" --> "1" Usuario : proprietario
+Contrato "0..*" --> "0..1" Usuario : proprietario
 ContratoCredito "0..*" --> "1" Banco : banco
 
 note bottom of Contrato
@@ -120,6 +120,10 @@ note bottom of Contrato
   CLIENTE → cliente do pedido;
   EMPRESA / BANCO → o próprio agente que
   executa o contrato (precisa ser do tipo).
+  Novos contratos sempre têm proprietário;
+  fica vazio só em contratos anteriores a esse
+  registro com tipo EMPRESA / BANCO (sem prova
+  de qual agente executou).
   Criar o contrato chama pedido.contratar().
 end note
 
