@@ -17,7 +17,7 @@
 | US11 | Modificar pedido | Cliente | Sistema completo | Pós-MVP |
 | US12 | Cancelar pedido | Cliente | Sistema completo | Pós-MVP |
 | US13 | Listar pedidos para análise | Agente | Sistema completo | MVP (simplificado) |
-| US14 | Consultar dados financeiros do cliente | Agente | Sistema completo | Futuro |
+| US14 | Consultar dados financeiros do cliente | Agente | Sistema completo | Pós-MVP |
 | US15 | Modificar pedido | Agente | Sistema completo | Futuro |
 | US16 | Avaliar pedido | Agente | Sistema completo | MVP (simplificado) |
 | US17 | Executar contrato | Agente | Sistema completo | Pós-MVP |
