@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.pucminas.carrental.dto.ContratoRequest;
+import br.pucminas.carrental.dto.PedidoDetalheResponse;
 import br.pucminas.carrental.dto.PedidoResponse;
 import br.pucminas.carrental.model.StatusPedido;
 import br.pucminas.carrental.service.PedidoService;
@@ -33,6 +34,12 @@ public class AgentePedidoController {
 	@GetMapping
 	public List<PedidoResponse> listar(@RequestParam(defaultValue = "EM_ANALISE") StatusPedido status) {
 		return pedidoService.listarPorStatus(status);
+	}
+
+	// US14
+	@GetMapping("/{pedidoId}")
+	public PedidoDetalheResponse detalhar(@PathVariable Long pedidoId) {
+		return pedidoService.detalharParaAgente(pedidoId);
 	}
 
 	// US16

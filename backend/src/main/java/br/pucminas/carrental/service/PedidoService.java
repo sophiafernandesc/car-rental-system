@@ -13,8 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 import br.pucminas.carrental.dto.ContratoRequest;
 import br.pucminas.carrental.dto.CreditoRequest;
 import br.pucminas.carrental.dto.CreditoResponse;
+import br.pucminas.carrental.dto.DadosFinanceirosResponse;
+import br.pucminas.carrental.dto.PedidoDetalheResponse;
 import br.pucminas.carrental.dto.PedidoRequest;
 import br.pucminas.carrental.dto.PedidoResponse;
+import br.pucminas.carrental.dto.RendimentoResponse;
 import br.pucminas.carrental.exception.ConflitoException;
 import br.pucminas.carrental.exception.NegocioException;
 import br.pucminas.carrental.exception.RecursoNaoEncontradoException;
@@ -99,6 +102,20 @@ public class PedidoService {
 	@Transactional(readOnly = true)
 	public List<PedidoResponse> listarPorStatus(StatusPedido status) {
 		return toResponses(pedidoRepository.findByStatusOrderByDataCriacaoAsc(status));
+	}
+
+	// US13 e US14
+	@Transactional(readOnly = true)
+	public PedidoDetalheResponse detalharParaAgente(Long pedidoId) {
+		PedidoAluguel pedido = buscarPedido(pedidoId);
+		Cliente cliente = pedido.getCliente();
+		List<RendimentoResponse> rendimentos = cliente.getRendimentos().stream()
+				.map(r -> new RendimentoResponse(r.getId(), r.getEntidadeEmpregadora(), r.getValor()))
+				.toList();
+
+		return new PedidoDetalheResponse(
+				toResponse(pedido),
+				new DadosFinanceirosResponse(cliente.getNome(), cliente.getProfissao(), rendimentos, cliente.getRendaTotal()));
 	}
 
 	// US16
@@ -208,6 +225,7 @@ public class PedidoService {
 				cliente.getRendaTotal(),
 				avaliador != null ? avaliador.getRazaoSocial() : null,
 				contrato != null ? contrato.getTipoProprietario().name() : null,
+				contrato != null ? contrato.getDataExecucao() : null,
 				credito != null
 						? new CreditoResponse(credito.getValor(), credito.getTaxaJuros(), credito.getPrazoMeses(),
 								credito.getBanco().getRazaoSocial())
