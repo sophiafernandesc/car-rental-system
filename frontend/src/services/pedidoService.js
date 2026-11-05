@@ -10,6 +10,7 @@ export const pedidoService = {
 
   // Agente
   listarPorStatus: (status) => api.get(`/agente/pedidos?status=${status}`),
+  detalharParaAgente: (id) => api.get(`/agente/pedidos/${id}`),
   aprovar: (id) => api.post(`/agente/pedidos/${id}/aprovar`),
   reprovar: (id) => api.post(`/agente/pedidos/${id}/reprovar`),
   executarContrato: (id, tipoProprietario, credito) =>

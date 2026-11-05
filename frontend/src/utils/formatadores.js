@@ -25,6 +25,11 @@ export function formatarCpf(cpf) {
   return cpf?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') ?? ''
 }
 
+export function contarDias(dataInicioIso, dataFimIso) {
+  const umDia = 24 * 60 * 60 * 1000
+  return Math.round((Date.parse(dataFimIso) - Date.parse(dataInicioIso)) / umDia)
+}
+
 export function hojeIso() {
   const hoje = new Date()
   const pad = (n) => String(n).padStart(2, '0')

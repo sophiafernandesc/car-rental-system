@@ -634,14 +634,47 @@ a {
 .lista {
   display: grid;
   gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
+/* Card clicável (abre o detalhe do pedido) */
 .pedido-card {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 16px 24px;
+  width: 100%;
   padding: 20px 24px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.pedido-card:hover {
+  background: var(--vidro-hover);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.pedido-card:active {
+  transform: translateY(1px);
+}
+
+.pedido-ver {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--acento-link);
+}
+
+.aba-contador {
+  margin-left: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.75rem;
 }
 
 .pedido-carro {
@@ -676,8 +709,174 @@ a {
 
 .contrato-opcoes {
   display: grid;
-  justify-items: end;
-  gap: 8px;
+  justify-items: start;
+  gap: 10px;
+}
+
+/* ---------- Modal (detalhe do pedido) ---------- */
+
+.modal {
+  width: min(640px, calc(100% - 32px));
+  max-height: calc(100vh - 48px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--texto);
+  overflow: visible;
+}
+
+.modal::backdrop {
+  background: rgba(2, 6, 4, 0.7);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.modal-painel {
+  display: grid;
+  gap: 22px;
+  max-height: calc(100vh - 48px);
+  padding: 24px 28px 28px;
+  overflow-y: auto;
+  background: rgba(14, 22, 18, 0.9);
+}
+
+.modal-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modal-cabecalho h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.modal-acoes {
+  display: grid;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--vidro-borda);
+}
+
+.modal-pergunta {
+  align-self: center;
+  font-weight: 600;
+}
+
+.detalhe {
+  display: grid;
+  gap: 20px;
+}
+
+.detalhe .secao-titulo {
+  margin-bottom: 8px;
+}
+
+.detalhe-destaque {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--vidro-borda);
+  border-radius: var(--raio-sm);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.detalhe-carro {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.detalhe-periodo {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.detalhe-periodo span,
+.detalhe-texto {
+  font-weight: 400;
+  color: var(--texto-suave);
+}
+
+.detalhe-texto strong {
+  color: var(--texto);
+}
+
+.linha-tempo {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0 0 0 22px;
+  list-style: none;
+  border-left: 2px solid var(--vidro-borda);
+}
+
+.linha-tempo li {
+  position: relative;
+  display: grid;
+  gap: 2px;
+}
+
+.linha-tempo li::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: -29px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--acento);
+  box-shadow: 0 0 0 4px rgba(61, 220, 132, 0.18);
+}
+
+.linha-tempo li.pendente::before {
+  background: #101a15;
+  border: 2px solid var(--texto-fraco);
+  box-shadow: none;
+}
+
+.linha-tempo li.pendente strong {
+  color: var(--texto-suave);
+  font-weight: 600;
+}
+
+.linha-tempo span {
+  font-size: 0.88rem;
+  color: var(--texto-suave);
+}
+
+.detalhe-financeiro {
+  display: grid;
+  gap: 10px;
+}
+
+.detalhe-financeiro .secao-titulo {
+  margin-bottom: 0;
+}
+
+.rendimentos-lista {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rendimentos-lista li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--vidro-borda);
+  border-radius: var(--raio-sm);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rendimentos-lista span {
+  color: var(--texto-suave);
 }
 
 .checkbox {
