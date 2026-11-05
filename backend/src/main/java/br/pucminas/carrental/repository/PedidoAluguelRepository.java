@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,8 +14,10 @@ import br.pucminas.carrental.model.StatusPedido;
 
 public interface PedidoAluguelRepository extends JpaRepository<PedidoAluguel, Long> {
 
+	@EntityGraph(attributePaths = { "automovel", "cliente", "avaliador" })
 	List<PedidoAluguel> findByClienteIdOrderByDataCriacaoDesc(Long clienteId);
 
+	@EntityGraph(attributePaths = { "automovel", "cliente", "avaliador" })
 	List<PedidoAluguel> findByStatusOrderByDataCriacaoAsc(StatusPedido status);
 
 	boolean existsByClienteIdAndStatusIn(Long clienteId, Collection<StatusPedido> status);
