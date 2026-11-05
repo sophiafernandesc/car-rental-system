@@ -1,5 +1,5 @@
--- Seed do MVP: agentes (US02) e automóveis (US19) são inseridos diretamente no banco.
--- Executado a cada inicialização; ON CONFLICT torna o script idempotente.
+-- Carga inicial: agentes de demonstração e frota de automóveis.
+-- Executado a cada inicialização e idempotente.
 -- Senha dos agentes: agente123
 
 -- Agente do tipo Empresa
@@ -28,8 +28,9 @@ WITH u AS (
 )
 INSERT INTO banco (id) SELECT id FROM a;
 
--- Automóveis
-INSERT INTO automovel (matricula, ano, marca, modelo, placa) VALUES
+-- Frota inicial: só é inserida com a tabela vazia, para não desfazer o que os agentes cadastram, editam ou removem
+INSERT INTO automovel (matricula, ano, marca, modelo, placa)
+SELECT * FROM (VALUES
 	('00123456789', 2024, 'Volkswagen', 'Polo', 'QWE1A23'),
 	('00234567891', 2023, 'Chevrolet', 'Onix', 'RTY2B34'),
 	('00345678912', 2024, 'Fiat', 'Pulse', 'UIO3C45'),
@@ -45,4 +46,5 @@ INSERT INTO automovel (matricula, ano, marca, modelo, placa) VALUES
 	('01356789123', 2024, 'Volkswagen', 'T-Cross', 'RFV4N45'),
 	('01467891234', 2025, 'Hyundai', 'Creta', 'TGB5P56'),
 	('01578912345', 2023, 'Jeep', 'Renegade', 'YHN6Q67')
-ON CONFLICT (placa) DO NOTHING;
+) AS frota (matricula, ano, marca, modelo, placa)
+WHERE NOT EXISTS (SELECT 1 FROM automovel);

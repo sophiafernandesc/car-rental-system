@@ -24,6 +24,8 @@ public interface PedidoAluguelRepository extends JpaRepository<PedidoAluguel, Lo
 
 	void deleteByClienteId(Long clienteId);
 
+	boolean existsByAutomovelId(Long automovelId);
+
 	// Verifica se o automóvel já está reservado em um período que se sobrepõe ao informado
 	@Query("""
 			select count(p) > 0 from PedidoAluguel p
