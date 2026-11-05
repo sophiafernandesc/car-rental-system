@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import Alerta from '../../components/Alerta.jsx'
 import Campo from '../../components/Campo.jsx'
-import CreditoResumo from '../../components/CreditoResumo.jsx'
+import Modal from '../../components/Modal.jsx'
+import PedidoCard from '../../components/PedidoCard.jsx'
+import PedidoDetalhe from '../../components/PedidoDetalhe.jsx'
 import StatusBadge from '../../components/StatusBadge.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { pedidoService } from '../../services/pedidoService'
-import { PROPRIETARIOS, formatarData, formatarDataHora, formatarMoeda } from '../../utils/formatadores'
+import { PROPRIETARIOS, formatarData, formatarMoeda } from '../../utils/formatadores'
 
 const ABAS = [
   { status: 'EM_ANALISE', rotulo: 'Em análise' },
@@ -14,13 +16,15 @@ const ABAS = [
   { status: 'REPROVADO', rotulo: 'Reprovados' },
 ]
 
-// US13, US16 e US17
+// US13, US14, US16, US17 e US18
 export default function PedidosAnalise() {
   const [status, setStatus] = useState('EM_ANALISE')
   const [resultado, setResultado] = useState({ status: null, pedidos: [] })
   const [erro, setErro] = useState(null)
   const [mensagem, setMensagem] = useState(null)
-  const [processandoId, setProcessandoId] = useState(null)
+  const [selecionado, setSelecionado] = useState(null)
+  const [erroAcao, setErroAcao] = useState(null)
+  const [processando, setProcessando] = useState(false)
 
   useEffect(() => {
     let ativo = true
@@ -42,19 +46,24 @@ export default function PedidosAnalise() {
     setStatus(novoStatus)
   }
 
-  // Executa uma ação sobre o pedido; em caso de sucesso ele sai da aba atual
+  function abrir(pedido) {
+    setErroAcao(null)
+    setSelecionado(pedido)
+  }
+
+  // Em caso de sucesso, o pedido sai da aba atual e o detalhe é fechado
   async function executar(pedido, acao, textoSucesso) {
-    setErro(null)
-    setMensagem(null)
-    setProcessandoId(pedido.id)
+    setErroAcao(null)
+    setProcessando(true)
     try {
       await acao()
       setResultado({ status, pedidos: pedidos.filter((p) => p.id !== pedido.id) })
+      setSelecionado(null)
       setMensagem(textoSucesso)
     } catch (e) {
-      setErro(e.message)
+      setErroAcao(e.message)
     } finally {
-      setProcessandoId(null)
+      setProcessando(false)
     }
   }
 
@@ -111,66 +120,107 @@ export default function PedidosAnalise() {
       )}
 
       {!carregando && pedidos.length > 0 && (
-        <ul className="lista" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+        <ul className="lista">
           {pedidos.map((pedido) => (
-            <li key={pedido.id} className="pedido-card glass">
-              <div>
-                <div className="pedido-carro">{pedido.clienteNome}</div>
-                <div className="pedido-meta">
-                  <span>
-                    Automóvel: <strong>{pedido.automovel.marca} {pedido.automovel.modelo}</strong> ({pedido.automovel.placa})
-                  </span>
-                  <span>
-                    Período: <strong>{formatarData(pedido.dataInicio)} a {formatarData(pedido.dataFim)}</strong>
-                  </span>
-                  <span>Pedido #{pedido.id} · criado em {formatarDataHora(pedido.dataCriacao)}</span>
-                  {pedido.avaliador && <span>Avaliado por {pedido.avaliador}</span>}
-                  {pedido.proprietario && (
-                    <span>
-                      Proprietário: <strong>{PROPRIETARIOS[pedido.proprietario]}</strong>
-                    </span>
-                  )}
-                  <CreditoResumo credito={pedido.credito} />
-                </div>
-              </div>
-
-              <div className="pedido-lateral">
-                <div className="pedido-renda">
-                  <span>Renda declarada</span>
-                  <strong>{formatarMoeda(pedido.clienteRendaTotal)}</strong>
-                </div>
-                {pedido.status === 'EM_ANALISE' && (
-                  <div className="acoes">
-                    <button
-                      type="button"
-                      className="btn btn-sucesso btn-sm"
-                      onClick={() => avaliar(pedido, true)}
-                      disabled={processandoId === pedido.id}
-                    >
-                      Aprovar
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-perigo btn-sm"
-                      onClick={() => avaliar(pedido, false)}
-                      disabled={processandoId === pedido.id}
-                    >
-                      Reprovar
-                    </button>
+            <PedidoCard
+              key={pedido.id}
+              titulo={pedido.clienteNome}
+              onAbrir={() => abrir(pedido)}
+              lateral={
+                <>
+                  <div className="pedido-renda">
+                    <span>Renda declarada</span>
+                    <strong>{formatarMoeda(pedido.clienteRendaTotal)}</strong>
                   </div>
-                )}
-                {pedido.status === 'APROVADO' && (
-                  <ExecutarContrato
-                    processando={processandoId === pedido.id}
-                    onConfirmar={(tipo, credito) => executarContrato(pedido, tipo, credito)}
-                  />
-                )}
-                {pedido.status !== 'EM_ANALISE' && pedido.status !== 'APROVADO' && <StatusBadge status={pedido.status} />}
-              </div>
-            </li>
+                  <StatusBadge status={pedido.status} />
+                </>
+              }
+            >
+              <span>
+                Automóvel: <strong>{pedido.automovel.marca} {pedido.automovel.modelo}</strong>
+              </span>
+              <span>
+                Período: <strong>{formatarData(pedido.dataInicio)} a {formatarData(pedido.dataFim)}</strong>
+              </span>
+              <span>Pedido #{pedido.id}</span>
+            </PedidoCard>
           ))}
         </ul>
       )}
+
+      {selecionado && (
+        <Modal titulo={`Pedido #${selecionado.id} · ${selecionado.clienteNome}`} onFechar={() => setSelecionado(null)}>
+          <DetalheAgente pedido={selecionado} />
+          {(selecionado.status === 'EM_ANALISE' || selecionado.status === 'APROVADO') && (
+            <footer className="modal-acoes">
+              <Alerta>{erroAcao}</Alerta>
+              {selecionado.status === 'EM_ANALISE' && (
+                <div className="acoes">
+                  <button type="button" className="btn btn-sucesso" onClick={() => avaliar(selecionado, true)} disabled={processando}>
+                    Aprovar pedido
+                  </button>
+                  <button type="button" className="btn btn-perigo" onClick={() => avaliar(selecionado, false)} disabled={processando}>
+                    Reprovar pedido
+                  </button>
+                </div>
+              )}
+              {selecionado.status === 'APROVADO' && (
+                <ExecutarContrato
+                  processando={processando}
+                  onConfirmar={(tipo, credito) => executarContrato(selecionado, tipo, credito)}
+                />
+              )}
+            </footer>
+          )}
+        </Modal>
+      )}
+    </>
+  )
+}
+
+// US14: dados financeiros do cliente para fundamentar o parecer
+function DetalheAgente({ pedido }) {
+  const [detalhe, setDetalhe] = useState(null)
+  const [erro, setErro] = useState(null)
+
+  useEffect(() => {
+    pedidoService.detalharParaAgente(pedido.id).then(setDetalhe).catch((e) => setErro(e.message))
+  }, [pedido.id])
+
+  const cliente = detalhe?.cliente
+
+  return (
+    <>
+      <PedidoDetalhe pedido={detalhe?.pedido ?? pedido} />
+
+      <section className="detalhe-financeiro">
+        <h3 className="secao-titulo">Dados financeiros do cliente</h3>
+        <Alerta>{erro}</Alerta>
+        {!cliente && !erro && <p className="carregando">Carregando…</p>}
+        {cliente && (
+          <>
+            <p className="detalhe-texto">
+              <strong>{cliente.nome}</strong> · {cliente.profissao}
+            </p>
+            {cliente.rendimentos.length === 0 ? (
+              <p className="carregando">Nenhum rendimento declarado.</p>
+            ) : (
+              <ul className="rendimentos-lista">
+                {cliente.rendimentos.map((r) => (
+                  <li key={r.id}>
+                    <span>{r.entidadeEmpregadora}</span>
+                    <strong>{formatarMoeda(r.valor)}</strong>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="rendimento-total">
+              <span>Renda total</span>
+              <strong>{formatarMoeda(cliente.rendaTotal)}</strong>
+            </div>
+          </>
+        )}
+      </section>
     </>
   )
 }
@@ -180,7 +230,6 @@ export default function PedidosAnalise() {
 function ExecutarContrato({ processando, onConfirmar }) {
   const { sessao } = useAuth()
   const ehBanco = sessao.tipoAgente === 'BANCO'
-  const [aberto, setAberto] = useState(false)
   const [tipo, setTipo] = useState(null)
   const [comCredito, setComCredito] = useState(false)
   const [credito, setCredito] = useState({ valor: '', taxaJuros: '', prazoMeses: '' })
@@ -195,14 +244,6 @@ function ExecutarContrato({ processando, onConfirmar }) {
       ? { valor: Number(credito.valor), taxaJuros: Number(credito.taxaJuros), prazoMeses: Number(credito.prazoMeses) }
       : null
     onConfirmar(tipo, dadosCredito)
-  }
-
-  if (!aberto) {
-    return (
-      <button type="button" className="btn btn-primario btn-sm" onClick={() => setAberto(true)}>
-        Executar contrato
-      </button>
-    )
   }
 
   return (
@@ -237,11 +278,8 @@ function ExecutarContrato({ processando, onConfirmar }) {
       )}
 
       <div className="acoes">
-        <button type="submit" className="btn btn-primario btn-sm" disabled={!tipo || processando}>
-          {processando ? 'Executando…' : 'Confirmar contrato'}
-        </button>
-        <button type="button" className="btn btn-vidro btn-sm" onClick={() => setAberto(false)}>
-          Voltar
+        <button type="submit" className="btn btn-primario" disabled={!tipo || processando}>
+          {processando ? 'Executando…' : 'Executar contrato'}
         </button>
       </div>
     </form>
