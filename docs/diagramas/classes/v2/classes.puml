@@ -82,7 +82,7 @@ package "model" {
     - id : Long
     - dataExecucao : LocalDate
     - tipoProprietario : TipoProprietario
-    + Contrato(pedido : PedidoAluguel, tipoProprietario : TipoProprietario)
+    + Contrato(pedido : PedidoAluguel, tipoProprietario : TipoProprietario, agente : Agente)
   }
 
   enum TipoProprietario {
@@ -112,12 +112,14 @@ PedidoAluguel "0..*" --> "1" Automovel : automovel
 PedidoAluguel "0..*" --> "0..1" Agente : avaliador
 Contrato "0..1" --> "1" PedidoAluguel : pedido
 Contrato "1" *-- "0..1" ContratoCredito : credito
+Contrato "0..*" --> "1" Usuario : proprietario
 ContratoCredito "0..*" --> "1" Banco : banco
 
 note bottom of Contrato
-  O proprietário do automóvel
-  (Cliente, Empresa ou Banco)
-  é definido pelo tipo de contrato.
+  O tipo de contrato define o proprietário:
+  CLIENTE → cliente do pedido;
+  EMPRESA / BANCO → o próprio agente que
+  executa o contrato (precisa ser do tipo).
   Criar o contrato chama pedido.contratar().
 end note
 

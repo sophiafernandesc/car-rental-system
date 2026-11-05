@@ -66,7 +66,9 @@ flowchart TD
     D1 --> D4{Excluir conta?}
     D2 --> D5([Dados atualizados]) --> D1
     D3 --> D5
-    D4 -- Sim --> Z
+    D4 -- Sim --> D6{"Tem pedido APROVADO<br/>ou CONTRATADO?"}
+    D6 -- Sim --> D7(["Exclusão bloqueada"]) --> D1
+    D6 -- Não --> Z
     D4 -- Não --> D1
 ```
 
@@ -89,17 +91,17 @@ flowchart TD
     B3 -- Modificar --> B4[Editar pedido] --> B1
     B3 -- Avaliar --> B5{Parecer financeiro}
     B5 -- Negativo --> B6(["Pedido REPROVADO"]) --> B
-    B5 -- Positivo --> B7(["Pedido APROVADO"])
+    B5 -- Positivo --> B8{"Automóvel livre<br/>no período?"}
+    B8 -- Sim --> B7(["Pedido APROVADO"])
+    B8 -- Não --> B9(["Aprovação recusada:<br/>carro já reservado"]) --> B1
 
     %% Contrato
     B7 --> C1[Executar contrato]
-    C1 --> C2{"Proprietário do automóvel<br/>conforme tipo de contrato"}
-    C2 --> C3[Cliente]
-    C2 --> C4[Empresa]
-    C2 --> C5[Banco]
+    C1 --> C2{"Proprietário do automóvel"}
+    C2 --> C3[Cliente do pedido]
+    C2 --> C4["O próprio agente<br/>(Empresa ou Banco)"]
     C3 --> C6{Agente é Banco?}
     C4 --> C6
-    C5 --> C6
     C6 -- Sim --> C7{Conceder contrato de crédito?}
     C7 -- Sim --> C8["Informa valor, juros e prazo"] --> C9
     C7 -- Não --> C9
@@ -110,6 +112,9 @@ flowchart TD
     V --> V1["Lista de automóveis"]
     V1 --> V2["Cadastrar / editar automóvel<br/>matrícula, ano, marca, modelo, placa"]
     V2 --> V1
+    V1 --> V3{"Remover: automóvel<br/>tem pedidos?"}
+    V3 -- Sim --> V4(["Remoção bloqueada"]) --> V1
+    V3 -- Não --> V5(["Automóvel removido"]) --> V1
 ```
 
 ---
@@ -135,6 +140,8 @@ stateDiagram-v2
 ---
 
 ## Decisões adotadas
+
+Pontos que o enunciado não define. Estão implementados conforme abaixo, mas **ainda não foram validados com o professor**.
 
 - [x] **Cadastro de automóveis:** quem cadastra? (adotado: agentes)
 - [x] **Cadastro de agentes:** autocadastro ou feito por um administrador? (adotado: autocadastro)

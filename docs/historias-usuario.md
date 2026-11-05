@@ -134,7 +134,7 @@
 - [x] Só é permitido modificar pedidos com status `EM_ANALISE`.
 - [x] As mesmas validações da criação se aplicam.
 
-> **Decisão adotada:** apenas pedidos `EM_ANALISE` podem ser modificados (a confirmar com o professor).
+> **Decisão adotada:** apenas pedidos `EM_ANALISE` podem ser modificados. Implementada; ainda não validada com o professor.
 
 ### US12 - Cancelar pedido
 **Como** cliente, **quero** cancelar um pedido, **para** desistir do aluguel.
@@ -144,7 +144,7 @@
 - [x] O sistema solicita confirmação antes de cancelar.
 - [x] O pedido passa para o status `CANCELADO` (não é removido do banco).
 
-> **Decisão adotada:** o cancelamento é permitido em `EM_ANALISE` e `APROVADO` (a confirmar com o professor).
+> **Decisão adotada:** o cancelamento é permitido em `EM_ANALISE` e `APROVADO`. Implementada; ainda não validada com o professor.
 
 ---
 
@@ -179,6 +179,7 @@
 - [ ] O agente pode registrar uma justificativa.
 - [x] O sistema registra qual agente avaliou o pedido. *(MVP)*
 - [x] Só é possível avaliar pedidos com status `EM_ANALISE`. *(MVP)*
+- [x] A aprovação só é aceita se o automóvel estiver livre no período, já que pedidos aprovados ou contratados reservam o carro.
 
 > **Fora do escopo:** a justificativa do parecer não foi implementada nesta versão.
 
@@ -188,6 +189,7 @@
 **Critérios de aceitação:**
 - [x] Só é possível para pedidos com status `APROVADO`.
 - [x] O agente define o proprietário do automóvel conforme o tipo de contrato: **Cliente**, **Empresa** ou **Banco**.
+- [x] O contrato registra o proprietário concreto: o cliente do pedido ou o próprio agente que executa o contrato.
 - [x] O contrato registra a data de execução.
 - [x] O pedido passa para o status `CONTRATADO`.
 

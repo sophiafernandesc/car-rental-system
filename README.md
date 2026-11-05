@@ -108,8 +108,8 @@ Os códigos entre parênteses referenciam as [histórias de usuário](docs/histo
 - Listar pedidos por status: em análise, aprovados, contratados e reprovados (US13).
 - Consultar os dados financeiros do cliente: profissão, rendimentos e renda total (US14).
 - Modificar o automóvel ou o período de pedidos em análise (US15).
-- Aprovar ou reprovar pedidos, com registro de quem avaliou (US16).
-- Executar o contrato de pedidos aprovados, definindo o proprietário do automóvel (US17).
+- Aprovar ou reprovar pedidos, com registro de quem avaliou; a aprovação confere de novo se o automóvel está livre no período (US16).
+- Executar o contrato de pedidos aprovados, registrando o proprietário do automóvel: o cliente ou o próprio agente (US17).
 - Gerenciar a frota: cadastrar, editar e remover automóveis, com matrícula (RENAVAM) e placa únicas (US19, US20).
 
 **🏦 Banco**
@@ -199,8 +199,10 @@ flowchart LR
 - **Autenticação no próprio back-end (JWT), e não pelo Supabase Auth.** Assim o login faz parte do modelo e do código Spring (MVC), e o Supabase é usado apenas como banco PostgreSQL.
 - **Data API do Supabase desativada.** Todo acesso aos dados passa pelo back-end; os dados pessoais (CPF, RG, renda) não ficam expostos por uma API pública.
 - **Perfil no token.** O JWT carrega o perfil (`CLIENTE` ou `AGENTE`), convertido em *roles* do Spring Security. Cada perfil só acessa suas rotas, e o cliente só acessa os próprios dados.
+- **Reserva só na aprovação.** Pedidos aprovados ou contratados reservam o automóvel. A aprovação confere a disponibilidade com a linha do automóvel bloqueada no banco (`PESSIMISTIC_WRITE`), para que duas aprovações simultâneas do mesmo carro não reservem o mesmo período.
+- **Proprietário concreto no contrato.** O contrato aponta para quem é o dono do automóvel: o cliente do pedido ou o agente (empresa ou banco) que executa o contrato. Um agente não registra o carro em nome de outro.
 - **Automóvel com pedidos não é removido.** Assim o histórico de pedidos e contratos é preservado.
-- **Desempenho com banco remoto.** As listagens carregam os relacionamentos numa única consulta (`@EntityGraph` e *batch fetching*), evitando o problema N+1. Isso reduziu o tempo da lista de pedidos de ~1,7 s para ~0,55 s.
+- **Desempenho com banco remoto.** As listagens trazem pedido, automóvel, cliente e avaliador numa única consulta (`@EntityGraph`); os contratos da lista vêm numa segunda consulta, e os rendimentos são carregados em lotes (*batch fetching*). Isso evita o problema N+1. Isso reduziu o tempo da lista de pedidos de ~1,7 s para ~0,55 s.
 
 **Limitações conhecidas**
 - O schema do banco é gerado pelo Hibernate (`ddl-auto=update`) e não por ferramentas de migração (Flyway/Liquibase).
@@ -259,7 +261,7 @@ Todas as rotas, exceto login e cadastros, exigem o cabeçalho `Authorization: Be
 ### Pré-requisitos
 
 * **Java JDK 25** (necessário para o back-end)
-* **Node.js** 20 ou superior, com **npm** (necessário para o front-end)
+* **Node.js** 20.19+ ou 22.12+, com **npm** (versões exigidas pelo Vite; necessário para o front-end)
 * Uma conta no **[Supabase](https://supabase.com)** com um projeto criado (plano gratuito é suficiente)
 * O **Maven** não precisa estar instalado: o projeto usa o Maven Wrapper (`./mvnw`)
 
@@ -447,7 +449,7 @@ curl -X POST http://localhost:8080/auth/login \
      -d '{"login": "banco", "senha": "agente123"}'
 
 # 2. Pedidos aguardando análise
-curl http://localhost:8080/agente/pedidos?status=EM_ANALISE \
+curl 'http://localhost:8080/agente/pedidos?status=EM_ANALISE' \
      -H 'Authorization: Bearer <token>'
 ```
 
@@ -478,13 +480,21 @@ Erros seguem o formato `ProblemDetail`:
 
 ## 🧪 Testes
 
-### Teste automatizado
+### Testes automatizados
 
 ```bash
 cd backend
 ./mvnw test
 ```
-*Ferramenta: JUnit 5 + Spring Boot Test.* O teste `CarrentalApplicationTests` sobe o contexto completo da aplicação, incluindo a conexão com o banco, a criação do schema e o seed.
+*Ferramentas: JUnit 5, AssertJ, Mockito e Spring Boot Test.*
+
+| Classe de teste | O que cobre |
+|---|---|
+| `PedidoAluguelTest` | Transições de status: aprovar, reprovar, modificar, cancelar e contratar, inclusive as transições proibidas |
+| `ContratoTest` | Execução do contrato, proprietário (cliente ou o próprio agente) e crédito concedido pelo banco |
+| `ClienteTest` | Limite de 3 rendimentos e cálculo da renda total |
+| `PedidoServiceTest` | Aprovação: bloqueia o automóvel e recusa quando outro pedido já reservou o período |
+| `CarrentalApplicationTests` | Sobe o contexto completo da aplicação, incluindo a conexão com o banco, a criação do schema e o seed |
 
 ### Testes manuais
 
@@ -493,6 +503,8 @@ As funcionalidades foram validadas de ponta a ponta durante o desenvolvimento:
   - CPF inválido e 4º rendimento → `400`/`422`;
   - avaliar pedido fora de análise → `422`;
   - carro indisponível no período → `409`;
+  - aprovar pedido cujo carro já foi reservado por outro → `409` (inclusive com duas aprovações simultâneas);
+  - empresa registrando o carro em nome de um banco → `422`;
   - empresa concedendo crédito → `403`;
   - cliente acessando pedido de outro → `404`;
   - cliente acessando rotas de agente → `403`.
