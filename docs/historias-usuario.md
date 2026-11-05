@@ -21,7 +21,7 @@
 | US15 | Modificar pedido | Agente | Sistema completo | Futuro |
 | US16 | Avaliar pedido | Agente | Sistema completo | MVP (simplificado) |
 | US17 | Executar contrato | Agente | Sistema completo | Pós-MVP |
-| US18 | Conceder contrato de crédito | Banco | Sistema completo | Futuro |
+| US18 | Conceder contrato de crédito | Banco | Sistema completo | Pós-MVP |
 | US19 | Cadastrar automóvel | Agente | Sistema completo | Seed |
 | US20 | Gerenciar automóveis | Agente | Sistema completo | Futuro |
 
