@@ -363,6 +363,10 @@ a {
   font-weight: 700;
 }
 
+.auth-rodape + .auth-rodape {
+  margin-top: 6px;
+}
+
 @media (min-width: 900px) {
   .auth:not(.auth-unica) {
     grid-template-columns: 1.1fr 1fr;

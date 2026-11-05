@@ -1,8 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from '../components/Layout.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import Frota from '../pages/agente/Frota.jsx'
 import PedidosAnalise from '../pages/agente/PedidosAnalise.jsx'
 import Cadastro from '../pages/Cadastro.jsx'
+import CadastroAgente from '../pages/CadastroAgente.jsx'
 import MeusPedidos from '../pages/cliente/MeusPedidos.jsx'
 import PedidoForm from '../pages/cliente/PedidoForm.jsx'
 import Perfil from '../pages/cliente/Perfil.jsx'
@@ -34,6 +36,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/login" element={<SomenteVisitante><Login /></SomenteVisitante>} />
       <Route path="/cadastro" element={<SomenteVisitante><Cadastro /></SomenteVisitante>} />
+      <Route path="/cadastro/agente" element={<SomenteVisitante><CadastroAgente /></SomenteVisitante>} />
 
       <Route element={<RotaProtegida perfil="CLIENTE"><Layout /></RotaProtegida>}>
         <Route path="/pedidos" element={<MeusPedidos />} />
@@ -44,6 +47,7 @@ export default function AppRoutes() {
 
       <Route element={<RotaProtegida perfil="AGENTE"><Layout /></RotaProtegida>}>
         <Route path="/agente/pedidos" element={<PedidosAnalise />} />
+        <Route path="/agente/automoveis" element={<Frota />} />
       </Route>
 
       <Route path="*" element={<Navigate to={rotaInicial(sessao)} replace />} />

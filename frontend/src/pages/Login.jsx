@@ -56,6 +56,9 @@ export default function Login() {
         <p className="auth-rodape">
           Ainda não tem conta? <Link to="/cadastro">Cadastre-se</Link>
         </p>
+        <p className="auth-rodape">
+          Empresa ou banco? <Link to="/cadastro/agente">Cadastre-se como agente</Link>
+        </p>
       </section>
     </div>
   )

@@ -8,7 +8,10 @@ const LINKS = {
     { to: '/pedidos/novo', rotulo: 'Novo pedido' },
     { to: '/perfil', rotulo: 'Meu perfil' },
   ],
-  AGENTE: [{ to: '/agente/pedidos', rotulo: 'Avaliação de pedidos' }],
+  AGENTE: [
+    { to: '/agente/pedidos', rotulo: 'Avaliação de pedidos' },
+    { to: '/agente/automoveis', rotulo: 'Frota' },
+  ],
 }
 
 const ROTULO_PERFIL = {
