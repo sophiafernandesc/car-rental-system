@@ -76,13 +76,13 @@ public class PedidoService {
 	// US10
 	@Transactional(readOnly = true)
 	public PedidoResponse buscarDoCliente(Long clienteId, Long pedidoId) {
-		return toResponse(buscarPedidoDoCliente(clienteId, pedidoId));
+		return toResponse(exigirDoCliente(clienteId, buscarPedido(pedidoId)));
 	}
 
 	// US11
 	@Transactional
 	public PedidoResponse modificar(Long clienteId, Long pedidoId, PedidoRequest request) {
-		PedidoAluguel pedido = buscarPedidoDoCliente(clienteId, pedidoId);
+		PedidoAluguel pedido = exigirDoCliente(clienteId, bloquearPedido(pedidoId));
 		aplicarModificacao(pedido, request);
 		return toResponse(pedido);
 	}
@@ -90,7 +90,7 @@ public class PedidoService {
 	// US15
 	@Transactional
 	public PedidoResponse modificarPeloAgente(Long pedidoId, PedidoRequest request) {
-		PedidoAluguel pedido = buscarPedido(pedidoId);
+		PedidoAluguel pedido = bloquearPedido(pedidoId);
 		aplicarModificacao(pedido, request);
 		return toResponse(pedido);
 	}
@@ -106,7 +106,7 @@ public class PedidoService {
 	// US12
 	@Transactional
 	public PedidoResponse cancelar(Long clienteId, Long pedidoId) {
-		PedidoAluguel pedido = buscarPedidoDoCliente(clienteId, pedidoId);
+		PedidoAluguel pedido = exigirDoCliente(clienteId, bloquearPedido(pedidoId));
 		pedido.cancelar();
 		return toResponse(pedido);
 	}
@@ -134,7 +134,7 @@ public class PedidoService {
 	// US16: o pedido aprovado reserva o automóvel, então a disponibilidade é conferida de novo
 	@Transactional
 	public PedidoResponse aprovar(Long agenteId, Long pedidoId) {
-		PedidoAluguel pedido = buscarPedido(pedidoId);
+		PedidoAluguel pedido = bloquearPedido(pedidoId);
 		pedido.aprovar(buscarAgente(agenteId));
 
 		Long automovelId = pedido.getAutomovel().getId();
@@ -149,7 +149,7 @@ public class PedidoService {
 	// US16
 	@Transactional
 	public PedidoResponse reprovar(Long agenteId, Long pedidoId) {
-		PedidoAluguel pedido = buscarPedido(pedidoId);
+		PedidoAluguel pedido = bloquearPedido(pedidoId);
 		pedido.reprovar(buscarAgente(agenteId));
 		return toResponse(pedido);
 	}
@@ -157,7 +157,7 @@ public class PedidoService {
 	// US17 e US18
 	@Transactional
 	public PedidoResponse executarContrato(Long agenteId, Long pedidoId, ContratoRequest request) {
-		PedidoAluguel pedido = buscarPedido(pedidoId);
+		PedidoAluguel pedido = bloquearPedido(pedidoId);
 		// unproxy: o agente pode já estar carregado como proxy (ex.: avaliador do pedido)
 		Agente agente = (Agente) Hibernate.unproxy(buscarAgente(agenteId));
 		Contrato contrato = new Contrato(pedido, request.tipoProprietario(), agente);
@@ -194,8 +194,13 @@ public class PedidoService {
 				.orElseThrow(() -> new RecursoNaoEncontradoException("Pedido não encontrado."));
 	}
 
-	private PedidoAluguel buscarPedidoDoCliente(Long clienteId, Long pedidoId) {
-		PedidoAluguel pedido = buscarPedido(pedidoId);
+	// Usado nas alterações: impede que, por exemplo, cancelar e executar contrato leiam o mesmo status ao mesmo tempo
+	private PedidoAluguel bloquearPedido(Long pedidoId) {
+		return pedidoRepository.bloquearParaAlteracao(pedidoId)
+				.orElseThrow(() -> new RecursoNaoEncontradoException("Pedido não encontrado."));
+	}
+
+	private PedidoAluguel exigirDoCliente(Long clienteId, PedidoAluguel pedido) {
 		if (!pedido.getCliente().getId().equals(clienteId)) {
 			throw new RecursoNaoEncontradoException("Pedido não encontrado.");
 		}

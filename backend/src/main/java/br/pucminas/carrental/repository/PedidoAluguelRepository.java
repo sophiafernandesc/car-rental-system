@@ -3,16 +3,24 @@ package br.pucminas.carrental.repository;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import br.pucminas.carrental.model.PedidoAluguel;
 import br.pucminas.carrental.model.StatusPedido;
+import jakarta.persistence.LockModeType;
 
 public interface PedidoAluguelRepository extends JpaRepository<PedidoAluguel, Long> {
+
+	// Bloqueia o pedido até o fim da transação: alterações concorrentes do mesmo pedido são executadas em sequência
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select p from PedidoAluguel p where p.id = :id")
+	Optional<PedidoAluguel> bloquearParaAlteracao(@Param("id") Long id);
 
 	@EntityGraph(attributePaths = { "automovel", "cliente", "avaliador" })
 	List<PedidoAluguel> findByClienteIdOrderByDataCriacaoDesc(Long clienteId);
