@@ -12,7 +12,7 @@ public record PedidoResponse(
 		LocalDateTime dataCriacao,
 		AutomovelResponse automovel,
 		String clienteNome,
-		// Base para o parecer financeiro do agente (US16)
 		BigDecimal clienteRendaTotal,
-		String avaliador) {
+		String avaliador,
+		String proprietario) {
 }

@@ -77,4 +77,30 @@ public class PedidoAluguel {
 		this.status = novoStatus;
 	}
 
+	// US11
+	public void modificar(Automovel automovel, LocalDate dataInicio, LocalDate dataFim) {
+		if (status != StatusPedido.EM_ANALISE) {
+			throw new IllegalStateException("Só é possível modificar pedidos com status EM_ANALISE.");
+		}
+		this.automovel = automovel;
+		this.dataInicio = dataInicio;
+		this.dataFim = dataFim;
+	}
+
+	// US12
+	public void cancelar() {
+		if (status != StatusPedido.EM_ANALISE && status != StatusPedido.APROVADO) {
+			throw new IllegalStateException("Só é possível cancelar pedidos em análise ou aprovados.");
+		}
+		this.status = StatusPedido.CANCELADO;
+	}
+
+	// US17
+	public void contratar() {
+		if (status != StatusPedido.APROVADO) {
+			throw new IllegalStateException("Só é possível executar o contrato de pedidos aprovados.");
+		}
+		this.status = StatusPedido.CONTRATADO;
+	}
+
 }

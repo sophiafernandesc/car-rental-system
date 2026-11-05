@@ -10,7 +10,6 @@ import jakarta.validation.constraints.Size;
 
 public record CadastroClienteRequest(
 		@NotBlank @Size(min = 4, max = 50) String login,
-		// BCrypt considera no máximo 72 bytes
 		@NotBlank @Size(min = 6, max = 72) String senha,
 		@NotBlank String rg,
 		@NotBlank @CPF String cpf,
