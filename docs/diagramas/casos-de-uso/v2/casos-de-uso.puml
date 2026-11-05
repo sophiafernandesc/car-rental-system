@@ -28,7 +28,7 @@ Banco --|> Agente
 rectangle "Sistema de Aluguel de Carros" {
   ' Autenticação
   usecase "Cadastrar-se como cliente\n(US01)" as UC01
-  usecase "Cadastrar-se como agente\n(US02)" as UC02 #FFF4D6
+  usecase "Cadastrar-se como agente\n(US02)" as UC02
   usecase "Fazer login\n(US03)" as UC03
   usecase "Fazer logout\n(US04)" as UC04
 
@@ -50,7 +50,8 @@ rectangle "Sistema de Aluguel de Carros" {
   usecase "Modificar pedido do cliente\n(US15)" as UC15
   usecase "Avaliar pedido\n(US16)" as UC16
   usecase "Executar contrato\n(US17)" as UC17
-  usecase "Gerenciar automóveis\n(US19 / US20)" as UC19 #FFF4D6
+  usecase "Cadastrar automóvel\n(US19)" as UC19
+  usecase "Gerenciar automóveis\n(US20)" as UC20
 
   ' Banco
   usecase "Conceder contrato de crédito\n(US18)" as UC18
@@ -77,6 +78,7 @@ UC15 -- Agente
 UC16 -- Agente
 UC17 -- Agente
 UC19 -- Agente
+UC20 -- Agente
 UC18 -- Banco
 
 ' ===== Include / Extend =====
@@ -86,7 +88,6 @@ UC18 .> UC17 : <<extend>>
 legend right
   |= Cor |= Situação |
   |<#DFF5E1>| Implementado |
-  |<#FFF4D6>| Dados inseridos via seed (sem tela) |
 endlegend
 
 @enduml

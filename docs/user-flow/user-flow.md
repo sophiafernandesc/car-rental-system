@@ -134,9 +134,9 @@ stateDiagram-v2
 
 ---
 
-## Decisões em aberto
+## Decisões adotadas
 
-- [ ] **Cadastro de automóveis:** quem cadastra? (proposta atual: agentes)
-- [ ] **Cadastro de agentes:** autocadastro ou feito por um administrador?
-- [ ] **Regras de alteração:** cliente pode modificar apenas pedidos `EM_ANALISE`? Pode cancelar após `APROVADO`?
-- [ ] **Matrícula x placa:** interpretar "matrícula" como RENAVAM?
+- [x] **Cadastro de automóveis:** quem cadastra? (adotado: agentes)
+- [x] **Cadastro de agentes:** autocadastro ou feito por um administrador? (adotado: autocadastro)
+- [x] **Regras de alteração:** cliente pode modificar apenas pedidos `EM_ANALISE`? Pode cancelar após `APROVADO`? (adotado: modifica só em `EM_ANALISE`; cancela em `EM_ANALISE` ou `APROVADO`)
+- [x] **Matrícula x placa:** interpretar "matrícula" como RENAVAM? (adotado: RENAVAM, 11 dígitos)

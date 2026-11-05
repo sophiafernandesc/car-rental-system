@@ -5,7 +5,7 @@
 | ID | História | Ator | Entrega | Escopo |
 |---|---|---|---|---|
 | US01 | Cadastrar-se como cliente | Visitante | Autenticação | MVP |
-| US02 | Cadastrar-se como agente | Visitante | Autenticação | Seed |
+| US02 | Cadastrar-se como agente | Visitante | Autenticação | Pós-MVP |
 | US03 | Fazer login | Usuário | Autenticação | MVP |
 | US04 | Fazer logout | Usuário | Autenticação | MVP |
 | US05 | Consultar meus dados | Cliente | CRUD Cliente | MVP |
@@ -22,15 +22,13 @@
 | US16 | Avaliar pedido | Agente | Sistema completo | MVP (simplificado) |
 | US17 | Executar contrato | Agente | Sistema completo | Pós-MVP |
 | US18 | Conceder contrato de crédito | Banco | Sistema completo | Pós-MVP |
-| US19 | Cadastrar automóvel | Agente | Sistema completo | Seed |
-| US20 | Gerenciar automóveis | Agente | Sistema completo | Futuro |
+| US19 | Cadastrar automóvel | Agente | Sistema completo | Pós-MVP |
+| US20 | Gerenciar automóveis | Agente | Sistema completo | Pós-MVP |
 
 **Escopo:**
 - **MVP** - implementado com back-end e tela.
 - **MVP (simplificado)** - implementado apenas com os critérios marcados como MVP na história.
 - **Pós-MVP** - implementado com back-end e tela após a entrega do MVP.
-- **Seed** - dados inseridos diretamente no banco (`data.sql`), sem tela de cadastro.
-- **Futuro** - mantido na modelagem (entidades existem no código), sem funcionalidade implementada nesta versão.
 
 ---
 
@@ -51,13 +49,11 @@
 **Como** visitante representando uma empresa ou banco, **quero** me cadastrar como agente, **para** poder avaliar pedidos de aluguel.
 
 **Critérios de aceitação:**
-- [ ] O formulário solicita: login, senha, CNPJ, razão social e tipo (Empresa ou Banco).
-- [ ] CNPJ e login devem ser únicos no sistema.
-- [ ] A senha é armazenada criptografada (hash).
+- [x] O formulário solicita: login, senha, CNPJ, razão social e tipo (Empresa ou Banco).
+- [x] CNPJ e login devem ser únicos no sistema.
+- [x] A senha é armazenada criptografada (hash).
 
->  **Pendente:** autocadastro ou cadastro feito por um administrador? 
->
-> **MVP:** agentes (Empresa e Banco) são inseridos via seed.
+> **Decisão adotada:** autocadastro pela tela "Cadastre-se como agente". No MVP, os agentes eram inseridos via seed; o seed mantém dois agentes de demonstração.
 
 ### US03 - Fazer login
 **Como** usuário cadastrado, **quero** entrar no sistema com login e senha, **para** acessar as funcionalidades do meu perfil.
@@ -211,21 +207,21 @@
 
 ## Automóveis
 
-> **Pendente:** confirmar quem cadastra os automóveis (proposta atual: agentes) e o significado de "matrícula" (proposta: RENAVAM).
->
-> **MVP:** automóveis são inseridos via seed.
+> **Decisão adotada:** os agentes cadastram os automóveis, e "matrícula" é o RENAVAM (11 dígitos). No MVP, a frota era inserida via seed; o seed agora só popula a frota inicial quando a tabela está vazia.
 
 ### US19 - Cadastrar automóvel
 **Como** agente, **quero** cadastrar automóveis, **para** que fiquem disponíveis para pedidos de aluguel.
 
 **Critérios de aceitação:**
-- [ ] O formulário solicita matrícula, ano, marca, modelo e placa.
-- [ ] Matrícula e placa devem ser únicas.
-- [ ] O ano não pode ser posterior ao ano atual + 1.
+- [x] O formulário solicita matrícula, ano, marca, modelo e placa.
+- [x] Matrícula e placa devem ser únicas.
+- [x] O ano não pode ser posterior ao ano atual + 1.
 
 ### US20 - Gerenciar automóveis
 **Como** agente, **quero** consultar, editar e remover automóveis, **para** manter a frota atualizada.
 
 **Critérios de aceitação:**
-- [ ] Lista os automóveis cadastrados.
-- [ ] Não é permitido remover automóvel vinculado a pedido `EM_ANALISE`, `APROVADO` ou `CONTRATADO`.
+- [x] Lista os automóveis cadastrados.
+- [x] Não é permitido remover automóvel vinculado a pedidos.
+
+> **Decisão adotada:** a remoção é bloqueada para qualquer pedido, e não só para os ativos, para preservar o histórico de pedidos e contratos.

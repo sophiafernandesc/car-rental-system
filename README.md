@@ -92,6 +92,7 @@ Os códigos entre parênteses referenciam as [histórias de usuário](docs/histo
 
 **🔐 Autenticação e acesso**
 - Cadastro de cliente com validação de CPF e de unicidade (US01).
+- Cadastro de agente (empresa ou banco) com validação de CNPJ e de unicidade (US02).
 - Login com usuário e senha; o sistema só pode ser usado após autenticação (US03).
 - Rotas protegidas por perfil: cliente e agente só acessam as próprias funcionalidades (US03).
 - Logout (US04).
@@ -109,11 +110,12 @@ Os códigos entre parênteses referenciam as [histórias de usuário](docs/histo
 - Modificar o automóvel ou o período de pedidos em análise (US15).
 - Aprovar ou reprovar pedidos, com registro de quem avaliou (US16).
 - Executar o contrato de pedidos aprovados, definindo o proprietário do automóvel (US17).
+- Gerenciar a frota: cadastrar, editar e remover automóveis, com matrícula (RENAVAM) e placa únicas (US19, US20).
 
 **🏦 Banco**
 - Conceder contrato de crédito (valor, juros ao mês e prazo) ao executar o contrato (US18).
 
-**Fora do escopo desta versão:** telas de cadastro de agentes e de automóveis (US02, US19 e US20). Agentes e automóveis são inseridos via script de seed (veja [Banco de Dados](#-banco-de-dados-supabase)).
+**Fora do escopo desta versão:** a justificativa escrita do parecer do agente (US16).
 
 ---
 
@@ -197,11 +199,11 @@ flowchart LR
 - **Autenticação no próprio back-end (JWT), e não pelo Supabase Auth.** Assim o login faz parte do modelo e do código Spring (MVC), e o Supabase é usado apenas como banco PostgreSQL.
 - **Data API do Supabase desativada.** Todo acesso aos dados passa pelo back-end; os dados pessoais (CPF, RG, renda) não ficam expostos por uma API pública.
 - **Perfil no token.** O JWT carrega o perfil (`CLIENTE` ou `AGENTE`), convertido em *roles* do Spring Security. Cada perfil só acessa suas rotas, e o cliente só acessa os próprios dados.
+- **Automóvel com pedidos não é removido.** Assim o histórico de pedidos e contratos é preservado.
 - **Desempenho com banco remoto.** As listagens carregam os relacionamentos numa única consulta (`@EntityGraph` e *batch fetching*), evitando o problema N+1. Isso reduziu o tempo da lista de pedidos de ~1,7 s para ~0,55 s.
 
 **Limitações conhecidas**
 - O schema do banco é gerado pelo Hibernate (`ddl-auto=update`) e não por ferramentas de migração (Flyway/Liquibase).
-- Não há tela de cadastro de agentes nem de automóveis; esses dados vêm do seed.
 - O projeto roda localmente; não há deploy em produção.
 
 ### Diagramas UML
@@ -227,11 +229,12 @@ Os diagramas estão versionados em [`docs/diagramas`](docs/diagramas). A **v1** 
 
 ### API REST
 
-Todas as rotas, exceto login e cadastro, exigem o cabeçalho `Authorization: Bearer <token>`.
+Todas as rotas, exceto login e cadastros, exigem o cabeçalho `Authorization: Bearer <token>`.
 
 | Método | Rota | Perfil | Descrição |
 |---|---|---|---|
 | `POST` | `/auth/cadastro` | Público | Cadastra um cliente (US01) |
+| `POST` | `/auth/cadastro/agente` | Público | Cadastra um agente: empresa ou banco (US02) |
 | `POST` | `/auth/login` | Público | Autentica e retorna o token JWT (US03) |
 | `GET` / `PUT` / `DELETE` | `/clientes/me` | Cliente | Consulta, atualiza ou exclui a própria conta (US05, US06, US08) |
 | `POST` | `/clientes/me/rendimentos` | Cliente | Adiciona rendimento (US07) |
@@ -246,6 +249,8 @@ Todas as rotas, exceto login e cadastro, exigem o cabeçalho `Authorization: Bea
 | `PUT` | `/agente/pedidos/{id}` | Agente | Modifica pedido em análise (US15) |
 | `POST` | `/agente/pedidos/{id}/aprovar` e `/reprovar` | Agente | Avalia o pedido (US16) |
 | `POST` | `/agente/pedidos/{id}/contrato` | Agente | Executa o contrato; crédito opcional, só para bancos (US17, US18) |
+| `POST` | `/agente/automoveis` | Agente | Cadastra automóvel (US19) |
+| `PUT` / `DELETE` | `/agente/automoveis/{id}` | Agente | Edita ou remove automóvel (US20) |
 
 ---
 
@@ -322,7 +327,7 @@ cd ..
 
 **Não é preciso criar tabelas.** Na primeira execução:
 - o Hibernate cria o schema automaticamente (`ddl-auto=update`);
-- o script [`data.sql`](backend/src/main/resources/data.sql) insere os **agentes** (uma empresa e um banco) e **15 automóveis**. O script é idempotente e pode rodar a cada inicialização sem duplicar dados.
+- o script [`data.sql`](backend/src/main/resources/data.sql) insere dois **agentes de demonstração** (uma empresa e um banco) e uma frota inicial de **15 automóveis**. O script é idempotente: a frota só é inserida com a tabela vazia, para não desfazer o que os agentes cadastram, editam ou removem.
 
 ---
 
@@ -350,7 +355,7 @@ npm run dev
 
 ### 👥 Usuários de Teste
 
-Os agentes são criados pelo seed. O cliente pode ser criado pela tela de cadastro.
+Os agentes abaixo são criados pelo seed. Novos clientes e agentes podem ser criados pelas telas de cadastro.
 
 | Perfil | Login | Senha |
 |---|---|---|
@@ -395,7 +400,7 @@ Os agentes são criados pelo seed. O cliente pode ser criado pela tela de cadast
 │       │   └── exception/            # 💥 Exceções e handler global
 │       ├── main/resources/
 │       │   ├── application.properties  # ⚙️ Configuração da aplicação
-│       │   └── data.sql                # 🌱 Seed: agentes e automóveis
+│       │   └── data.sql                # 🌱 Carga inicial: agentes e frota
 │       └── test/java/                # 🧪 Teste de inicialização da aplicação
 │
 └── frontend/                         # ⚛️ Aplicação React + Vite
