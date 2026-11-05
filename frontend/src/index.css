@@ -438,6 +438,12 @@ a {
   border-color: var(--erro);
 }
 
+.campo input:disabled,
+.carro-opcao:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .campo input:read-only {
   background: transparent;
   border-style: dashed;
@@ -520,6 +526,13 @@ a {
 
 .btn-perigo:hover:not(:disabled) {
   background: rgba(255, 163, 163, 0.22);
+}
+
+/* Botão de escolha (ex.: proprietário do automóvel) */
+.btn[aria-pressed='true'] {
+  border-color: var(--acento);
+  background: var(--acento-suave);
+  color: var(--texto);
 }
 
 .btn-sm {
@@ -661,6 +674,20 @@ a {
   text-align: right;
 }
 
+.contrato-opcoes {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.contrato-rotulo {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--texto-fraco);
+}
+
 .pedido-renda span {
   display: block;
   font-size: 0.75rem;
@@ -684,6 +711,10 @@ a {
   .pedido-renda {
     align-items: flex-start;
     text-align: left;
+  }
+
+  .contrato-opcoes {
+    justify-items: start;
   }
 }
 

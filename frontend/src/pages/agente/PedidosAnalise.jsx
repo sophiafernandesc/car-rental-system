@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react'
 import Alerta from '../../components/Alerta.jsx'
 import StatusBadge from '../../components/StatusBadge.jsx'
 import { pedidoService } from '../../services/pedidoService'
-import { formatarData, formatarDataHora, formatarMoeda } from '../../utils/formatadores'
+import { PROPRIETARIOS, formatarData, formatarDataHora, formatarMoeda } from '../../utils/formatadores'
 
 const ABAS = [
   { status: 'EM_ANALISE', rotulo: 'Em análise' },
   { status: 'APROVADO', rotulo: 'Aprovados' },
+  { status: 'CONTRATADO', rotulo: 'Contratados' },
   { status: 'REPROVADO', rotulo: 'Reprovados' },
 ]
 
-// US13 e US16
+// US13, US16 e US17
 export default function PedidosAnalise() {
   const [status, setStatus] = useState('EM_ANALISE')
   const [resultado, setResultado] = useState({ status: null, pedidos: [] })
@@ -38,14 +39,15 @@ export default function PedidosAnalise() {
     setStatus(novoStatus)
   }
 
-  async function avaliar(pedido, aprovar) {
+  // Executa uma ação sobre o pedido; em caso de sucesso ele sai da aba atual
+  async function executar(pedido, acao, textoSucesso) {
     setErro(null)
     setMensagem(null)
     setProcessandoId(pedido.id)
     try {
-      await (aprovar ? pedidoService.aprovar(pedido.id) : pedidoService.reprovar(pedido.id))
+      await acao()
       setResultado({ status, pedidos: pedidos.filter((p) => p.id !== pedido.id) })
-      setMensagem(`Pedido #${pedido.id} de ${pedido.clienteNome} ${aprovar ? 'aprovado' : 'reprovado'}.`)
+      setMensagem(textoSucesso)
     } catch (e) {
       setErro(e.message)
     } finally {
@@ -53,12 +55,28 @@ export default function PedidosAnalise() {
     }
   }
 
+  function avaliar(pedido, aprovar) {
+    return executar(
+      pedido,
+      () => (aprovar ? pedidoService.aprovar(pedido.id) : pedidoService.reprovar(pedido.id)),
+      `Pedido #${pedido.id} de ${pedido.clienteNome} ${aprovar ? 'aprovado' : 'reprovado'}.`,
+    )
+  }
+
+  function executarContrato(pedido, tipoProprietario) {
+    return executar(
+      pedido,
+      () => pedidoService.executarContrato(pedido.id, tipoProprietario),
+      `Contrato do pedido #${pedido.id} executado. Proprietário do automóvel: ${PROPRIETARIOS[tipoProprietario]}.`,
+    )
+  }
+
   return (
     <>
       <header className="pagina-cabecalho">
         <div>
           <h1>Avaliação de pedidos</h1>
-          <p>Analise a situação financeira do cliente e emita seu parecer.</p>
+          <p>Analise a situação financeira do cliente, emita seu parecer e execute os contratos aprovados.</p>
         </div>
       </header>
 
@@ -103,6 +121,11 @@ export default function PedidosAnalise() {
                   </span>
                   <span>Pedido #{pedido.id} · criado em {formatarDataHora(pedido.dataCriacao)}</span>
                   {pedido.avaliador && <span>Avaliado por {pedido.avaliador}</span>}
+                  {pedido.proprietario && (
+                    <span>
+                      Proprietário: <strong>{PROPRIETARIOS[pedido.proprietario]}</strong>
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -111,7 +134,7 @@ export default function PedidosAnalise() {
                   <span>Renda declarada</span>
                   <strong>{formatarMoeda(pedido.clienteRendaTotal)}</strong>
                 </div>
-                {pedido.status === 'EM_ANALISE' ? (
+                {pedido.status === 'EM_ANALISE' && (
                   <div className="acoes">
                     <button
                       type="button"
@@ -130,14 +153,60 @@ export default function PedidosAnalise() {
                       Reprovar
                     </button>
                   </div>
-                ) : (
-                  <StatusBadge status={pedido.status} />
                 )}
+                {pedido.status === 'APROVADO' && (
+                  <ExecutarContrato
+                    processando={processandoId === pedido.id}
+                    onConfirmar={(tipo) => executarContrato(pedido, tipo)}
+                  />
+                )}
+                {pedido.status !== 'EM_ANALISE' && pedido.status !== 'APROVADO' && <StatusBadge status={pedido.status} />}
               </div>
             </li>
           ))}
         </ul>
       )}
     </>
+  )
+}
+
+// US17: o tipo de contrato define o proprietário do automóvel
+function ExecutarContrato({ processando, onConfirmar }) {
+  const [aberto, setAberto] = useState(false)
+  const [tipo, setTipo] = useState(null)
+
+  if (!aberto) {
+    return (
+      <button type="button" className="btn btn-primario btn-sm" onClick={() => setAberto(true)}>
+        Executar contrato
+      </button>
+    )
+  }
+
+  return (
+    <div className="contrato-opcoes" role="group" aria-label="Proprietário do automóvel">
+      <span className="contrato-rotulo">Proprietário do automóvel</span>
+      <div className="acoes">
+        {Object.entries(PROPRIETARIOS).map(([valor, rotulo]) => (
+          <button
+            key={valor}
+            type="button"
+            className="btn btn-vidro btn-sm"
+            aria-pressed={tipo === valor}
+            onClick={() => setTipo(valor)}
+          >
+            {rotulo}
+          </button>
+        ))}
+      </div>
+      <div className="acoes">
+        <button type="button" className="btn btn-primario btn-sm" onClick={() => onConfirmar(tipo)} disabled={!tipo || processando}>
+          {processando ? 'Executando…' : 'Confirmar contrato'}
+        </button>
+        <button type="button" className="btn btn-vidro btn-sm" onClick={() => setAberto(false)}>
+          Voltar
+        </button>
+      </div>
+    </div>
   )
 }
