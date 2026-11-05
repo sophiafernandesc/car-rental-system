@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.pucminas.carrental.dto.CadastroAgenteRequest;
 import br.pucminas.carrental.dto.CadastroClienteRequest;
 import br.pucminas.carrental.dto.LoginRequest;
 import br.pucminas.carrental.dto.LoginResponse;
@@ -28,6 +29,13 @@ public class AuthController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public Map<String, Long> cadastrar(@Valid @RequestBody CadastroClienteRequest request) {
 		return Map.of("id", authService.cadastrarCliente(request));
+	}
+
+	// US02
+	@PostMapping("/cadastro/agente")
+	@ResponseStatus(HttpStatus.CREATED)
+	public Map<String, Long> cadastrarAgente(@Valid @RequestBody CadastroAgenteRequest request) {
+		return Map.of("id", authService.cadastrarAgente(request));
 	}
 
 	// US03

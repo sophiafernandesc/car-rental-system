@@ -4,6 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.pucminas.carrental.dto.CadastroAgenteRequest;
 import br.pucminas.carrental.dto.CadastroClienteRequest;
 import br.pucminas.carrental.dto.LoginRequest;
 import br.pucminas.carrental.dto.LoginResponse;
@@ -15,6 +16,7 @@ import br.pucminas.carrental.model.Cliente;
 import br.pucminas.carrental.model.Empresa;
 import br.pucminas.carrental.model.Rendimento;
 import br.pucminas.carrental.model.Usuario;
+import br.pucminas.carrental.repository.AgenteRepository;
 import br.pucminas.carrental.repository.ClienteRepository;
 import br.pucminas.carrental.repository.UsuarioRepository;
 import br.pucminas.carrental.security.TokenService;
@@ -26,6 +28,7 @@ public class AuthService {
 
 	private final UsuarioRepository usuarioRepository;
 	private final ClienteRepository clienteRepository;
+	private final AgenteRepository agenteRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final TokenService tokenService;
 
@@ -57,6 +60,26 @@ public class AuthService {
 		}
 
 		return clienteRepository.save(cliente).getId();
+	}
+
+	@Transactional
+	public Long cadastrarAgente(CadastroAgenteRequest request) {
+		String cnpj = somenteDigitos(request.cnpj());
+
+		if (usuarioRepository.existsByLogin(request.login())) {
+			throw new ConflitoException("Login já cadastrado.");
+		}
+		if (agenteRepository.existsByCnpj(cnpj)) {
+			throw new ConflitoException("CNPJ já cadastrado.");
+		}
+
+		Agente agente = "BANCO".equals(request.tipo()) ? new Banco() : new Empresa();
+		agente.setLogin(request.login());
+		agente.setSenha(passwordEncoder.encode(request.senha()));
+		agente.setCnpj(cnpj);
+		agente.setRazaoSocial(request.razaoSocial());
+
+		return agenteRepository.save(agente).getId();
 	}
 
 	@Transactional(readOnly = true)

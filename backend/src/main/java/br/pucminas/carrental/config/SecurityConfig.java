@@ -41,7 +41,7 @@ public class SecurityConfig {
 				.cors(Customizer.withDefaults())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers(HttpMethod.POST, "/auth/login", "/auth/cadastro").permitAll()
+						.requestMatchers(HttpMethod.POST, "/auth/login", "/auth/cadastro", "/auth/cadastro/agente").permitAll()
 						.requestMatchers("/error").permitAll()
 						.requestMatchers("/clientes/**", "/pedidos/**").hasRole("CLIENTE")
 						.requestMatchers("/agente/**").hasRole("AGENTE")
