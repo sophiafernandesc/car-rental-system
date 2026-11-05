@@ -1,24 +1,39 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import Alerta from '../../components/Alerta.jsx'
 import Campo from '../../components/Campo.jsx'
 import { automovelService } from '../../services/automovelService'
 import { pedidoService } from '../../services/pedidoService'
 import { hojeIso } from '../../utils/formatadores'
 
-// US09
-export default function NovoPedido() {
+// US09 (novo pedido) e US11 (modificar pedido em análise)
+export default function PedidoForm() {
+  const { id } = useParams()
+  const edicao = Boolean(id)
   const navigate = useNavigate()
   const [automoveis, setAutomoveis] = useState(null)
   const [automovelId, setAutomovelId] = useState(null)
   const [periodo, setPeriodo] = useState({ dataInicio: '', dataFim: '' })
+  const [bloqueado, setBloqueado] = useState(false)
   const [erro, setErro] = useState(null)
   const [erros, setErros] = useState({})
   const [enviando, setEnviando] = useState(false)
 
   useEffect(() => {
-    automovelService.listar().then(setAutomoveis).catch((e) => setErro(e.message))
-  }, [])
+    Promise.all([automovelService.listar(), edicao ? pedidoService.buscar(id) : null])
+      .then(([carros, pedido]) => {
+        setAutomoveis(carros)
+        if (pedido) {
+          setAutomovelId(pedido.automovel.id)
+          setPeriodo({ dataInicio: pedido.dataInicio, dataFim: pedido.dataFim })
+          if (pedido.status !== 'EM_ANALISE') {
+            setBloqueado(true)
+            setErro('Este pedido não pode mais ser modificado: apenas pedidos em análise podem ser alterados.')
+          }
+        }
+      })
+      .catch((e) => setErro(e.message))
+  }, [edicao, id])
 
   function alterarPeriodo(evento) {
     setPeriodo({ ...periodo, [evento.target.name]: evento.target.value })
@@ -34,8 +49,10 @@ export default function NovoPedido() {
     setErros({})
     setEnviando(true)
     try {
-      const pedido = await pedidoService.criar({ automovelId, ...periodo })
-      navigate('/pedidos', { state: { mensagem: `Pedido #${pedido.id} enviado para análise.` } })
+      const dados = { automovelId, ...periodo }
+      const pedido = edicao ? await pedidoService.modificar(id, dados) : await pedidoService.criar(dados)
+      const mensagem = edicao ? `Pedido #${pedido.id} atualizado.` : `Pedido #${pedido.id} enviado para análise.`
+      navigate('/pedidos', { state: { mensagem } })
     } catch (e) {
       setErro(e.message)
       setErros(e.erros ?? {})
@@ -47,8 +64,12 @@ export default function NovoPedido() {
     <>
       <header className="pagina-cabecalho">
         <div>
-          <h1>Novo pedido de aluguel</h1>
-          <p>Escolha o automóvel e o período. Seu pedido será analisado por um agente.</p>
+          <h1>{edicao ? `Modificar pedido #${id}` : 'Novo pedido de aluguel'}</h1>
+          <p>
+            {edicao
+              ? 'Altere o automóvel ou o período. O pedido continua em análise.'
+              : 'Escolha o automóvel e o período. Seu pedido será analisado por um agente.'}
+          </p>
         </div>
       </header>
 
@@ -66,6 +87,7 @@ export default function NovoPedido() {
                 className="carro-opcao glass"
                 aria-pressed={automovelId === carro.id}
                 onClick={() => setAutomovelId(carro.id)}
+                disabled={bloqueado}
               >
                 <div className="carro-marca">{carro.marca}</div>
                 <div className="carro-modelo">{carro.modelo}</div>
@@ -88,6 +110,7 @@ export default function NovoPedido() {
               value={periodo.dataInicio}
               onChange={alterarPeriodo}
               erro={erros.dataInicio}
+              disabled={bloqueado}
               required
             />
             <Campo
@@ -98,17 +121,18 @@ export default function NovoPedido() {
               value={periodo.dataFim}
               onChange={alterarPeriodo}
               erro={erros.dataFim}
+              disabled={bloqueado}
               required
             />
           </div>
         </section>
 
         <div className="acoes">
-          <button type="submit" className="btn btn-primario" disabled={enviando}>
-            {enviando ? 'Enviando…' : 'Enviar pedido'}
+          <button type="submit" className="btn btn-primario" disabled={enviando || bloqueado}>
+            {enviando ? 'Enviando…' : edicao ? 'Salvar alterações' : 'Enviar pedido'}
           </button>
           <button type="button" className="btn btn-vidro" onClick={() => navigate('/pedidos')}>
-            Cancelar
+            Voltar
           </button>
         </div>
       </form>

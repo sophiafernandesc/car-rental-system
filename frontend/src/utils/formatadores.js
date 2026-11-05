@@ -4,7 +4,6 @@ export function formatarMoeda(valor) {
   return moeda.format(Number(valor ?? 0))
 }
 
-// "2026-12-01" -> "01/12/2026" (sem conversão de fuso horário)
 export function formatarData(dataIso) {
   if (!dataIso) return ''
   const [ano, mes, dia] = dataIso.slice(0, 10).split('-')
@@ -16,11 +15,16 @@ export function formatarDataHora(dataHoraIso) {
   return `${formatarData(dataHoraIso)} às ${dataHoraIso.slice(11, 16)}`
 }
 
+export const PROPRIETARIOS = {
+  CLIENTE: 'Cliente',
+  EMPRESA: 'Empresa',
+  BANCO: 'Banco',
+}
+
 export function formatarCpf(cpf) {
   return cpf?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') ?? ''
 }
 
-// Data local no formato aceito por <input type="date">
 export function hojeIso() {
   const hoje = new Date()
   const pad = (n) => String(n).padStart(2, '0')

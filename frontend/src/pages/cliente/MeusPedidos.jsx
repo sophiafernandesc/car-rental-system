@@ -3,17 +3,23 @@ import { Link, useLocation } from 'react-router-dom'
 import Alerta from '../../components/Alerta.jsx'
 import StatusBadge from '../../components/StatusBadge.jsx'
 import { pedidoService } from '../../services/pedidoService'
-import { formatarData, formatarDataHora } from '../../utils/formatadores'
+import { PROPRIETARIOS, formatarData, formatarDataHora } from '../../utils/formatadores'
 
-// US10
+// US10, com acesso a US11 (modificar) e US12 (cancelar)
 export default function MeusPedidos() {
   const location = useLocation()
   const [pedidos, setPedidos] = useState(null)
   const [erro, setErro] = useState(null)
+  const [mensagem, setMensagem] = useState(location.state?.mensagem ?? null)
 
   useEffect(() => {
     pedidoService.listarMeus().then(setPedidos).catch((e) => setErro(e.message))
   }, [])
+
+  function atualizarPedido(atualizado) {
+    setPedidos(pedidos.map((p) => (p.id === atualizado.id ? atualizado : p)))
+    setMensagem(`Pedido #${atualizado.id} cancelado.`)
+  }
 
   return (
     <>
@@ -27,7 +33,7 @@ export default function MeusPedidos() {
         </Link>
       </header>
 
-      <Alerta tipo="sucesso" className="pagina-alerta">{location.state?.mensagem}</Alerta>
+      <Alerta tipo="sucesso" className="pagina-alerta">{mensagem}</Alerta>
       <Alerta className="pagina-alerta">{erro}</Alerta>
 
       {pedidos === null && !erro && <p className="carregando">Carregando pedidos…</p>}
@@ -58,15 +64,68 @@ export default function MeusPedidos() {
                   </span>
                   <span>Pedido #{pedido.id} · criado em {formatarDataHora(pedido.dataCriacao)}</span>
                   {pedido.avaliador && <span>Avaliado por {pedido.avaliador}</span>}
+                  {pedido.proprietario && (
+                    <span>
+                      Proprietário: <strong>{PROPRIETARIOS[pedido.proprietario]}</strong>
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="pedido-lateral">
                 <StatusBadge status={pedido.status} />
+                <AcoesPedido pedido={pedido} onCancelado={atualizarPedido} onErro={setErro} />
               </div>
             </li>
           ))}
         </ul>
       )}
     </>
+  )
+}
+
+function AcoesPedido({ pedido, onCancelado, onErro }) {
+  const [confirmando, setConfirmando] = useState(false)
+  const [cancelando, setCancelando] = useState(false)
+
+  const podeModificar = pedido.status === 'EM_ANALISE'
+  const podeCancelar = pedido.status === 'EM_ANALISE' || pedido.status === 'APROVADO'
+  if (!podeCancelar) return null
+
+  async function cancelar() {
+    onErro(null)
+    setCancelando(true)
+    try {
+      onCancelado(await pedidoService.cancelar(pedido.id))
+    } catch (e) {
+      onErro(e.message)
+      setCancelando(false)
+      setConfirmando(false)
+    }
+  }
+
+  if (confirmando) {
+    return (
+      <div className="acoes">
+        <button type="button" className="btn btn-perigo btn-sm" onClick={cancelar} disabled={cancelando}>
+          {cancelando ? 'Cancelando…' : 'Confirmar cancelamento'}
+        </button>
+        <button type="button" className="btn btn-vidro btn-sm" onClick={() => setConfirmando(false)}>
+          Voltar
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="acoes">
+      {podeModificar && (
+        <Link to={`/pedidos/${pedido.id}/editar`} className="btn btn-vidro btn-sm">
+          Modificar
+        </Link>
+      )}
+      <button type="button" className="btn btn-perigo btn-sm" onClick={() => setConfirmando(true)}>
+        Cancelar pedido
+      </button>
+    </div>
   )
 }

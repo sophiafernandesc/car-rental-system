@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import PedidosAnalise from '../pages/agente/PedidosAnalise.jsx'
 import Cadastro from '../pages/Cadastro.jsx'
 import MeusPedidos from '../pages/cliente/MeusPedidos.jsx'
-import NovoPedido from '../pages/cliente/NovoPedido.jsx'
+import PedidoForm from '../pages/cliente/PedidoForm.jsx'
 import Perfil from '../pages/cliente/Perfil.jsx'
 import Login from '../pages/Login.jsx'
 
@@ -37,7 +37,8 @@ export default function AppRoutes() {
 
       <Route element={<RotaProtegida perfil="CLIENTE"><Layout /></RotaProtegida>}>
         <Route path="/pedidos" element={<MeusPedidos />} />
-        <Route path="/pedidos/novo" element={<NovoPedido />} />
+        <Route path="/pedidos/novo" element={<PedidoForm />} />
+        <Route path="/pedidos/:id/editar" element={<PedidoForm />} />
         <Route path="/perfil" element={<Perfil />} />
       </Route>
 
