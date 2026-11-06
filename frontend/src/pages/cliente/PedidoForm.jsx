@@ -84,7 +84,7 @@ export default function PedidoForm() {
               <button
                 key={carro.id}
                 type="button"
-                className="carro-opcao glass"
+                className="carro-opcao"
                 aria-pressed={automovelId === carro.id}
                 onClick={() => setAutomovelId(carro.id)}
                 disabled={bloqueado}
